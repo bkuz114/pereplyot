@@ -839,7 +839,7 @@ def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
                     file_html = convert_txt_to_html(filepath)
                 elif file_ext == ".docx":
                     file_html = convert_docx_to_html(filepath)
-                elif file_ext == ".markdown":
+                elif file_ext == ".markdown" or file_ext == ".md":
                     file_html = convert_markdown_to_html(filepath, mode)
                 file_html = post_process_file_html(file_html)
 
