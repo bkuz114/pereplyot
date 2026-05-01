@@ -45,6 +45,12 @@ pereplyot manifest.json --output site/
 pereplyot manifest.json --force
 ```
 
+### Automatically open generated file in default web browser upon completion
+
+```bash
+pereplyot manifest.json --browser
+```
+
 ### With custom template
 
 ```bash
