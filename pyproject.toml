@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pereplyot"
+dynamic = ["version"]
+description = "Generate HTML word count reports from text and DOCX documents"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Ivan K.", email = "ivan.kzv@protonmail.com"}
+]
+maintainers = [
+    {name = "Ivan K.", email = "ivan.kzv@protonmail.com"}
+]
+keywords = ["pereplyot", "docx", "text", "html"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Utilities",
+    "Environment :: Console",
+]
+
+dependencies = [
+    "beautifulsoup4>=4.12",
+    "python-docx>=1.0.0",
+	"markdown>=3.5",
+	"pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "build>=1.0",
+    "twine>=4.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/bkuz114/pereplyot"
+"Bug Reports" = "https://github.com/bkuz114/pereplyot/issues"
+"Source" = "https://github.com/bkuz114/pereplyot"
+
+[project.scripts]
+pereplyot = "pereplyot.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pereplyot*"]
+exclude = ["tests*", "examples*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "pereplyot.__version__"}
+
+# Include non-Python files
+[tool.setuptools.package-data]
+pereplyot = [
+    "templates/**/*",
+    "assets/**/*",
+    "vendor/**/*.py",
+]
+
+# Optional: pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+# Optional: coverage configuration
+[tool.coverage.run]
+source = ["pereplyot.py"]
+omit = ["tests/*", "examples/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "pass",
+]

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" id="top">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{asset_path_prefix}}css/styles.css">
+    <!-- css rules establishing site themes (used by themePicker) -->
+    <link rel="stylesheet" href="{{asset_path_prefix}}css/themes.css">
+
+    <!-- themePicker.js library for theme selection -->
+    <script src="{{asset_path_prefix}}js/themePicker.js"></script>
+    <!--
+        Theme Picker init + demo UI logic.
+
+        MUST be in <head> with no defer/async to prevent FOUC.
+        (The script applies the stored theme before the page paints,
+        then builds the UI inside DOMContentLoaded.)
+    -->
+    <script src="{{asset_path_prefix}}js/dropdown-widget.js"></script>
+
+    <!-- html content as variables so js can switch smoothly. Created by python -->
+    <script src="{{asset_path_prefix}}js/sections.js"></script>
+
+    <!-- TOC and UI interactions -->
+    <script src="{{asset_path_prefix}}js/scripts.js" defer></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{asset_path_prefix}}images/favicon.ico">
+</head>
+
+<body>
+    <!-- Fixed header with TOC toggle and dark mode button -->
+    <header class="site-header">
+        <button class="toc-toggle" id="toc-toggle" aria-label="Table of Contents" aria-expanded="false">
+            <span class="toc-icon">☰</span>
+            <span class="toc-label">TOC</span>
+        </button>
+        <div class="site-title">
+            <a href="#top">{{title}}</a>
+        </div>
+        <!-- Theme selector widget -->
+        <div class="theme-widget">
+            <button id="themeBtn" class="theme-btn" aria-label="Select theme">
+            </button>
+            <div id="themeMenu" class="theme-menu hidden" role="listbox" aria-label="Available themes">
+                <!-- Options populated by themes.js -->
+            </div>
+        </div>
+    </header>
+
+    <!-- TOC panel (hidden by default) -->
+    <nav class="toc-panel" id="toc-panel" aria-label="Table of Contents">
+        <div class="toc-header">
+            <span class="toc-header-title">Contents</span>
+            <button class="toc-close" id="toc-close" aria-label="Close table of contents">✕</button>
+        </div>
+        {{toc}}
+    </nav>
+
+    <!-- Overlay for mobile when TOC is open -->
+    <div class="toc-overlay" id="toc-overlay"></div>
+
+    <!-- Main content -->
+    <main class="container" id="main-content">
+        {{content}}
+    </main>
+
+    <!-- Print-only footer -->
+    <footer class="print-footer">
+        {{title}} — Generated from Markdown source
+    </footer>
+</body>
+
+</html>

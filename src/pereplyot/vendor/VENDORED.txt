@@ -1,0 +1,41 @@
+# Vendored Dependencies for pereplyot
+# Last updated: 2026-05-01
+# See CONTRIBUTING.md for vendoring policy
+
+## template_utils.py (https://github.com/bkuz114/template_utils)
+- Version: 0.3.0 (commit 1e21de5)
+  https://github.com/bkuz114/template_utils/releases/tag/v0.3.0
+  https://github.com/bkuz114/template_utils/commit/1e21de59bd9ed8e769818dd2c8a40d1393f1f008
+- Original license: MIT
+- Files vendored:
+  - template_utils.py → template_utils.py
+- Modifications: None (vendored as-is)
+- Reason: Provides markdown AST parsing; only the parser is needed, not the full library
+
+## themePicker.js (https://github.com/bkuz114/themePicker)
+- Version: 1.0.4 (commit 789xyz012)
+- Original license: BSD 3-Clause
+- Files vendored:
+  - themePicker.js → assets/js/themePicker.js
+- Modifications: None (vendored as-is)
+- Reason: HTML rendering logic; CLI tool only uses the renderer, not the bundler or watcher
+
+## inputfile.py (https://github.com/bkuz114/inputfile-parser)
+- Version: 1.0.0+ (commit 05a57f5)
+  https://github.com/bkuz114/inputfile-parser/commit/05a57f52e5cf13e4199d10c11f6fbf2b00e04109
+- Original license: MIT
+- Files vendored:
+  - inputfile.py → inputfile.py
+- Modifications: None (vendored as-is)
+- Reason: parsing JSON inputfiles
+
+## beautiful_soup_utils.py (https://github.com/bkuz114/libs)
+- https://github.com/bkuz114/libs/commit/04b9135e1824ef74a320e4268b6511788b799ffa
+- Original license: None
+- Files vendored:
+  - beautiful_soup_utils.py → beautiful_soup_utils.py
+- Modifications: None (vendored as-is)
+- Reason: prettifying beautiful soup while still preserving Cyrillic
+
+## Vendor Maintenance Notes
+- Do not edit vendored files directly; modify source and re-vendor

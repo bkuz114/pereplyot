@@ -1,0 +1,785 @@
+/* ============================================================================
+   Cleaning Guide Styles
+   ============================================================================ */
+
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+
+    /* For theme vars, see themes.css */
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+    /* Typography */
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
+
+    --transition-speed: 0.2s;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    line-height: 1.6;
+    scroll-behavior: smooth;
+}
+
+.hidden {
+    display: none;
+}
+
+.chapter-title {
+    text-align: center;
+}
+
+/**
+ * the 0.15s (150ms) delay is also hardcoded
+ * in js (see switchDocument); they should
+ * match so if you change here, change there
+ */
+#main-content {
+    opacity: 1;
+    transition: opacity 0.15s ease;
+}
+
+/* ============================================================================
+   Fixed Header
+   ============================================================================ */
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--header-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.25rem;
+    z-index: 1000;
+    box-shadow: var(--shadow-sm);
+}
+
+.toc-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: background 0.2s ease;
+}
+
+.toc-toggle:hover {
+    background: var(--bg-surface-secondary);
+}
+
+.toc-icon {
+    font-size: 1.25rem;
+}
+
+.toc-label {
+    font-size: 0.9rem;
+}
+
+.site-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40%;
+}
+
+.site-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.site-title a:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+/* --------------------------------------------
+   Theme widget (dropdown picker)
+   -------------------------------------------- */
+
+.theme-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    box-shadow: var(--card-shadow);
+}
+
+.theme-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.theme-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+    overflow: hidden;
+    transition: all var(--transition-speed) ease;
+}
+
+.theme-menu.hidden {
+    display: none;
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    color: var(--text-primary);
+}
+
+.theme-option:hover {
+    background: var(--code-bg);
+}
+
+.preview-swatch {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+/* Dots style */
+.preview-swatch.preview-dots {
+    display: inline-flex;
+    gap: 2px;
+    background: transparent;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-dot {
+    flex: 1;
+    height: 100%;
+    border-radius: 2px;
+}
+
+/* If you want three equal dots with spacing */
+.preview-swatch.preview-dots {
+    gap: 3px;
+    padding: 0 2px;
+}
+
+/* ============================================================================
+   TOC Panel (Slide from left on desktop, slide from top on mobile)
+   ============================================================================ */
+.toc-panel {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 300px;
+    height: calc(100% - 60px);
+    background: var(--toc-bg);
+    border-right: 1px solid var(--border);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1001;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    /** safety: ensure panel hidden unless opened */
+    visibility: hidden;
+}
+
+.toc-panel.open {
+    transform: translateX(0);
+    /**
+     * ensure panel visibile when opened
+     * (needed, as added visibiltiy: hidden;
+     * for default state)
+     */
+    visibility: visible;
+}
+
+.toc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+
+.toc-header-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.toc-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    color: var(--text-secondary);
+}
+
+.toc-close:hover {
+    background: var(--bg-surface-secondary);
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0.75rem;
+    margin: 0;
+}
+
+.toc-list li {
+    margin: 0;
+    padding: 0;
+}
+
+.toc-list a {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-left: 2px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.toc-list a:hover,
+.toc-list a.selected {
+    background: var(--toc-hover);
+    color: var(--accent);
+    border-left-color: var(--accent);
+}
+
+/* TOC indentation levels */
+.toc-level-h2 {
+    padding-left: 0 !important;
+    font-weight: 500;
+}
+
+.toc-level-h3 {
+    padding-left: 1.5rem !important;
+    font-size: 0.85rem;
+}
+
+.toc-level-h4 {
+    padding-left: 2.5rem !important;
+    font-size: 0.8rem;
+}
+
+/* TOC overlay (mobile) */
+.toc-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.toc-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Mobile: slide from top instead of left */
+@media (max-width: 768px) {
+    .toc-panel {
+        position: fixed;
+        /**
+         * Hide toc-panel visually when not open
+         * (moves completely off-screen above viewport)
+         */
+        top: -100vh;
+        /**
+         * Also hide from accessibility tree -
+         * top:-100vh alone keeps panel focusable
+         * via keyboard/screen reader
+         */
+        visibility: hidden;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 70vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        /* Smooth slide animation when toggling between -100vh and 60px */
+        transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toc-panel.open {
+        /* Slide down to just below header */
+        top: 60px;
+        /**
+         * Restore interaction when open
+         * (Adds back to accessibility tree)
+         */
+        visibility: visible;
+    }
+
+    .toc-list a {
+        padding: 0.75rem 1.25rem;
+    }
+
+    /** Ensure toggle button always visible and clickable on mobile */
+    .toc-toggle {
+        position: relative;
+        /* Ensure above any overlapping elements */
+        z-index: 1002;
+        /* Defensive: ensure flex display even if overridden elsewhere */
+        display: flex;
+    }
+}
+
+/* ============================================================================
+   Splash page styling
+   ============================================================================ */
+
+/* Splash page styles */
+.splash-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.splash-card {
+    max-width: 800px;
+    width: 100%;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border);
+}
+
+.splash-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin: 0 0 2rem 0;
+    text-align: center;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1rem;
+}
+
+.splash-metadata-row {
+    display: flex;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.splash-metadata-label {
+    width: 100px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.splash-metadata-value {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.splash-description {
+    margin: 1.5rem 0;
+    padding: 1.25rem;
+    background: var(--bg-surface-secondary);
+    border-radius: 8px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    border-left: 3px solid var(--accent);
+}
+
+.splash-footer {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.splash-instruction {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+    letter-spacing: 0.3px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .splash-card {
+        padding: 1.5rem;
+    }
+
+    .splash-title {
+        font-size: 1.75rem;
+    }
+
+    .splash-metadata-row {
+        flex-direction: column;
+        padding: 0.75rem 0;
+    }
+
+    .splash-metadata-label {
+        width: auto;
+        margin-bottom: 0.25rem;
+    }
+}
+
+/* ============================================================================
+   Main Content Container
+   ============================================================================ */
+.container {
+    max-width: 900px;
+    margin: 80px auto 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* ============================================================================
+   Misconceptions Cards (Grid Layout)
+   ============================================================================ */
+
+.misconceptions {
+    margin: 2rem 0;
+}
+
+.misconceptions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.misconception-card {
+    background: var(--bg-surface-secondary);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.misconception-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Card typography */
+.misconception-card p:first-child {
+    margin-top: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--accent);
+}
+
+.misconception-card ul {
+    margin: 0.75rem 0 0 0;
+    padding-left: 1.25rem;
+}
+
+.misconception-card li {
+    margin: 0.5rem 0;
+}
+
+/* Bold labels inside cards (Misconception:, Reality:) */
+.misconception-card strong {
+    color: var(--text-primary);
+}
+
+/* Small screens: single column */
+@media (max-width: 640px) {
+    .misconceptions-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* ============================================================================
+   Table Zebra Striping (Subtle)
+   ============================================================================ */
+
+/* Style for tables inside responsive wrapper */
+.table-responsive table tbody tr:nth-child(even) {
+    background-color: var(--bg-surface-secondary);
+}
+
+/* Ensure header row stays distinct */
+.table-responsive table thead tr {
+    background-color: var(--bg-surface-secondary);
+    border-bottom: 2px solid var(--border);
+}
+
+/* Optional: hover effect for rows (improves scanability) */
+.table-responsive table tbody tr:hover {
+    background-color: var(--border-light);
+    transition: background 0.15s ease;
+}
+
+/* ============================================================================
+   Typography & Content Elements
+   ============================================================================ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    scroll-margin-top: 80px;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-top: 0;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 0.25rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Lists */
+ul,
+ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+li {
+    margin: 0.25rem 0;
+}
+
+/* Tables */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+}
+
+th,
+td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+}
+
+th {
+    background: var(--bg-surface-secondary);
+    font-weight: 600;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+@media (max-width: 640px) {
+    table {
+        font-size: 0.8rem;
+    }
+
+    th,
+    td {
+        padding: 0.5rem;
+    }
+}
+
+/* Warning box */
+.warning-box {
+    background: var(--warning-bg);
+    border-left: 4px solid var(--warning-border);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
+}
+
+.warning-box h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    color: var(--warning-text);
+}
+
+.warning-box p {
+    margin-bottom: 0;
+    color: var(--warning-text);
+}
+
+/* Code: inline */
+code {
+    background-color: var(--code-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--code-text);
+    white-space: normal;
+}
+
+/* Code: blocks */
+pre {
+    background-color: var(--code-block-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    font-size: 0.9em;
+    color: var(--code-block-text);
+    white-space: pre;
+}
+
+/* Blockquotes */
+blockquote {
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    border-left: 4px solid var(--accent);
+    background: var(--bg-surface-secondary);
+    font-style: italic;
+}
+
+/* Horizontal rule */
+hr {
+    margin: 2rem 0;
+    border: none;
+    height: 1px;
+    background: var(--border);
+}
+
+/* --------------------------------------------
+   Responsive
+   -------------------------------------------- */
+@media (max-width: 640px) {
+    .theme-widget {
+        top: 1rem;
+        right: 1rem;
+    }
+
+    .theme-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Print styles */
+@media print {
+
+    .site-header,
+    .toc-panel,
+    .toc-overlay,
+    .toc-toggle {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        color: black;
+    }
+
+    .container {
+        margin: 0 auto;
+        max-width: 100%;
+    }
+
+    a {
+        color: black;
+        text-decoration: underline;
+    }
+
+    .warning-box {
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+        color: black;
+    }
+
+    .print-footer {
+        display: block;
+        text-align: center;
+        font-size: 0.75rem;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #ccc;
+        color: #666;
+    }
+}
+
+.print-footer {
+    display: none;
+}

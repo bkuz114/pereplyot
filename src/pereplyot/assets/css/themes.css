@@ -1,0 +1,244 @@
+/* ==================================
+ * THEME PICKER THEMES
+ *
+ * - see theme
+ * ==================================
+ */
+
+.theme-light {
+    /* Light mode colors */
+    --bg-body: #f8f9fa;
+    --bg-surface: #ffffff;
+    --bg-surface-secondary: #f1f3f5;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #6c757d;
+    --border: #dee2e6;
+    --border-light: #e9ecef;
+
+    /* Accent colors */
+    --accent: #0d6efd;
+    --accent-hover: #0b5ed7;
+    --warning-bg: #fff3cd;
+    --warning-border: #ffc107;
+    --warning-text: #856404;
+    --success-bg: #d1e7dd;
+    --success-border: #198754;
+
+    /* Code colors */
+    --code-bg: #e9ecef;
+    --code-text: #d63384;
+    --code-block-bg: #f1f3f5;
+    --code-block-text: #212529;
+
+    /* Header */
+    --header-bg: rgba(255, 255, 255, 0.95);
+    --header-border: #dee2e6;
+
+    /* TOC panel */
+    --toc-bg: #ffffff;
+    --toc-hover: #f8f9fa;
+
+    /* misc */
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.theme-dark {
+    /* Dark mode colors */
+    --bg-body: #121212;
+    --bg-surface: #1e1e1e;
+    --bg-surface-secondary: #2a2a2a;
+    --text-primary: #e9ecef;
+    --text-secondary: #ced4da;
+    --text-muted: #adb5bd;
+    --border: #2c2c2c;
+    --border-light: #252525;
+
+    /* Accent colors (dark mode adjusted) */
+    --accent: #3d8bff;
+    --accent-hover: #5c9eff;
+    --warning-bg: #332701;
+    --warning-border: #ffc107;
+    --warning-text: #ffde9e;
+
+    /* Code colors (dark mode) */
+    --code-bg: #2a2a2a;
+    --code-text: #e6739f;
+    --code-block-bg: #252525;
+    --code-block-text: #e9ecef;
+
+    /* Header */
+    --header-bg: rgba(30, 30, 30, 0.95);
+    --header-border: #2c2c2c;
+
+    /* TOC panel */
+    --toc-bg: #1e1e1e;
+    --toc-hover: #2a2a2a;
+
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+
+/* =============================================
+   NORD THEME (Cool, slate-inspired)
+   ============================================= */
+.theme-nord {
+    /* Base colors */
+    --bg-body: #2e3440;
+    --bg-surface: #3b4252;
+    --bg-surface-secondary: #434c5e;
+    --text-primary: #eceff4;
+    --text-secondary: #e5e9f0;
+    --text-muted: #d8dee9;
+    --border: #4c566a;
+    --border-light: #434c5e;
+
+    /* Accent colors */
+    --accent: #88c0d0;
+    --accent-hover: #81a1c1;
+    --warning-bg: #4c3f2e;
+    --warning-border: #ebcb8b;
+    --warning-text: #ebcb8b;
+    --success-bg: #3b5249;
+    --success-border: #a3be8c;
+    --success-text: #a3be8c;
+
+    /* Code colors */
+    --code-bg: #434c5e;
+    --code-text: #bf616a;
+    --code-block-bg: #3b4252;
+    --code-block-text: #eceff4;
+
+    /* Header */
+    --header-bg: rgba(59, 66, 82, 0.95);
+    --header-border: #4c566a;
+
+    /* TOC panel */
+    --toc-bg: #3b4252;
+    --toc-hover: #434c5e;
+
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* =============================================
+   FOREST THEME (Earthy, muted green)
+   ============================================= */
+.theme-forest {
+    /* Base colors */
+    --bg-body: #1a231c;
+    --bg-surface: #243029;
+    --bg-surface-secondary: #2d3a32;
+    --text-primary: #e8ede9;
+    --text-secondary: #d0dbd4;
+    --text-muted: #b6c7bc;
+    --border: #3a4a3f;
+    --border-light: #2d3a32;
+
+    /* Accent colors */
+    --accent: #6b9e7a;
+    --accent-hover: #7db08a;
+    --warning-bg: #3d3520;
+    --warning-border: #d4a843;
+    --warning-text: #e6c87a;
+    --success-bg: #2a4533;
+    --success-border: #5c9e6d;
+    --success-text: #8ccb9a;
+
+    /* Code colors */
+    --code-bg: #2d3a32;
+    --code-text: #c57b7b;
+    --code-block-bg: #243029;
+    --code-block-text: #e8ede9;
+
+    /* Header */
+    --header-bg: rgba(36, 48, 41, 0.95);
+    --header-border: #3a4a3f;
+
+    /* TOC panel */
+    --toc-bg: #243029;
+    --toc-hover: #2d3a32;
+
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* =============================================
+   SEPIA THEME (Warm, low blue-light reading)
+   ============================================= */
+.theme-sepia {
+    /* Base colors */
+    --bg-body: #f4ecd8;
+    --bg-surface: #fbf6e9;
+    --bg-surface-secondary: #f5edd9;
+    --text-primary: #3b2e1e;
+    --text-secondary: #5c4a33;
+    --text-muted: #7a6248;
+    --border: #d4c5a9;
+    --border-light: #e3d6be;
+
+    /* Accent colors */
+    --accent: #9b6b43;
+    --accent-hover: #7e5332;
+    --warning-bg: #f2e0b0;
+    --warning-border: #c49b3e;
+    --warning-text: #6b4f1d;
+    --success-bg: #dae8d5;
+    --success-border: #6b8e5a;
+    --success-text: #3b5e2b;
+
+    /* Code colors */
+    --code-bg: #e3d6be;
+    --code-text: #8b4e5e;
+    --code-block-bg: #f5edd9;
+    --code-block-text: #3b2e1e;
+
+    /* Header */
+    --header-bg: rgba(251, 246, 233, 0.95);
+    --header-border: #d4c5a9;
+
+    /* TOC panel */
+    --toc-bg: #fbf6e9;
+    --toc-hover: #f5edd9;
+
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* =============================================
+   VOID THEME (High contrast, true black)
+   ============================================= */
+.theme-void {
+    /* Base colors */
+    --bg-body: #000000;
+    --bg-surface: #0a0a0a;
+    --bg-surface-secondary: #141414;
+    --text-primary: #fafafa;
+    --text-secondary: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --border: #262626;
+    --border-light: #1a1a1a;
+
+    /* Accent colors */
+    --accent: #a277ff;
+    --accent-hover: #b892ff;
+    --warning-bg: #261f00;
+    --warning-border: #ffcc00;
+    --warning-text: #ffdf66;
+    --success-bg: #0a1f0a;
+    --success-border: #2ecc71;
+    --success-text: #55efc4;
+
+    /* Code colors */
+    --code-bg: #141414;
+    --code-text: #ff7eb6;
+    --code-block-bg: #0a0a0a;
+    --code-block-text: #fafafa;
+
+    /* Header */
+    --header-bg: rgba(10, 10, 10, 0.95);
+    --header-border: #262626;
+
+    /* TOC panel */
+    --toc-bg: #0a0a0a;
+    --toc-hover: #141414;
+
+    --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.5);
+}
