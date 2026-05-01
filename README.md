@@ -106,7 +106,7 @@ A collection of example manifest files and documents can be found in `examples/`
 ```
 git clone https://github.com/bkuz114/pereplyot.git
 pip inistall pereplyot
-pereplyot examples/fishing_doc.json
+pereplyot examples/the-fishing-book/manifest.json
 ```
 
 ## File Types
