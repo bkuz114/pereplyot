@@ -834,7 +834,7 @@ def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
                 # HTML for this file
                 file_html = ""
                 filepath = fileRef.path
-                file_ext = filepath.suffix
+                file_ext = filepath.suffix.lower()
                 if file_ext == ".txt":
                     file_html = convert_txt_to_html(filepath)
                 elif file_ext == ".docx":
