@@ -540,20 +540,71 @@ def convert_markdown_to_html(filepath: str, mode: int) -> str:
 
 def convert_txt_to_html(filepath: Path) -> str:
     """
-    Convert .txt file to HTML
+    Convert .txt file to HTML with paragraph preservation and exact leading whitespace.
+
+    Behavior:
+        - Splits text into paragraphs on double newlines (blank lines).
+        - Each paragraph is wrapped in <p> tags.
+        - Single newlines within a paragraph become <br> tags.
+        - Leading spaces/tabs on the FIRST line of a paragraph are preserved visually
+          by converting each space to &nbsp; and each tab to 4 &nbsp;.
+        - If the first line has no leading whitespace, no &nbsp; prefix is added.
+
+    Note:
+        Only the first line of each paragraph is checked and prefixed. Leading
+        whitespace on subsequent lines is not preserved (as they are typically
+        wrapped lines, not intentional indentation).
 
     Args:
         filepath: Path to .txt file
 
     Returns:
-        HTML string
+        HTML string with paragraphs, line breaks, and preserved leading indentation.
+
+    Raises:
+        Exception: If file does not exist or is not a .txt file.
     """
     if not filepath.exists():
         raise Exception(f".txt file {filepath} does not exist!")
     if not filepath.suffix == ".txt":
         raise Exception(f"File is not .txt! {filepath}")
 
-    return read_file(filepath)
+    raw_text = read_file(filepath)
+    # Normalize Windows line endings to Unix-style
+    raw_text = raw_text.replace("\r\n", "\n")
+
+    # Split on double newlines (blank lines) to identify paragraphs
+    paragraphs = re.split(r"\n\s*\n", raw_text.strip())
+
+    html_parts = []
+    for para in paragraphs:
+        para = para.strip("\n")
+        if not para.strip():  # Skip empty paragraphs
+            continue
+
+        lines = para.split("\n")
+        if not lines:
+            continue
+
+        # Check first line only for leading whitespace
+        first_line = lines[0]
+        preserve_prefix = ""
+
+        if first_line and first_line[0] in (" ", "\t"):
+            # Convert leading spaces/tabs to &nbsp; entities
+            for ch in first_line:
+                if ch == " ":
+                    preserve_prefix += "&nbsp;"
+                elif ch == "\t":
+                    preserve_prefix += "&nbsp;" * 4
+                else:
+                    break  # Stop at first non-whitespace character
+
+        # Rebuild paragraph with <br> for newlines
+        para_with_br = "<br>\n".join(lines)
+        html_parts.append(f"<p>{preserve_prefix}{para_with_br}</p>")
+
+    return "\n".join(html_parts)
 
 
 def convert_docx_to_html(filepath: Path) -> str:
@@ -580,7 +631,7 @@ def convert_docx_to_html(filepath: Path) -> str:
 
 
 def post_process_file_html(html: str) -> str:
-    return f'<p class="file-section">{html}</p>'
+    return f'<div class="file-section">{html}</div>'
 
 
 def post_process_chapter_html(html: str, title: str) -> tuple[str, str]:
