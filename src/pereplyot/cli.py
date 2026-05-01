@@ -6,7 +6,7 @@ the documents.
 
 Usage:
     pereplyot INPUT [--output DIR] [--template FILE] [--force] [--strict]
-               [--quiet] [--clean] [--mode MODE]
+               [--quiet] [--clean] [--mode MODE] [--browser]
 
 Examples:
     # outputs to dist/binder.html
@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 import yaml
 import markdown
+import webbrowser
 from bs4 import BeautifulSoup
 import logging
 
@@ -388,7 +389,7 @@ def template_html(
     return full_content
 
 
-def write_html_file(content: str, output: Path, force: bool) -> None:
+def write_html_file(content: str, output: Path, force: bool) -> Path:
     """
     Write the final HTML file, checking for existing file and --force flag.
 
@@ -396,6 +397,9 @@ def write_html_file(content: str, output: Path, force: bool) -> None:
         content: Final HTML string.
         output: Path to write html file to
         force: Whether to overwrite existing file.
+
+    Returns:
+        Path to file written
 
     Raises:
         FileExistsError: If file exists and force is False.
@@ -411,6 +415,8 @@ def write_html_file(content: str, output: Path, force: bool) -> None:
         soup, output, True, True, True, [], [], False
     )
     logger.info(f"✅ Generated: {output}")
+
+    return output
 
 
 def create_home(doc: Document) -> str:
@@ -546,6 +552,7 @@ def convert_txt_to_html(filepath: Path) -> str:
         raise Exception(f".txt file {filepath} does not exist!")
     if not filepath.suffix == ".txt":
         raise Exception(f"File is not .txt! {filepath}")
+
     return read_file(filepath)
 
 
@@ -881,7 +888,7 @@ def generate_binder(
     force: bool,
     strict: bool,
     mode: int,
-) -> None:
+) -> Path:
     """
     Creates HTML site from list of files in JSON inputfile.
 
@@ -903,7 +910,7 @@ def generate_binder(
               based on filename if not in frontmatter.
 
     Returns:
-        None
+        Path to generated file
     """
 
     # Document title for HTML <title> and other branding
@@ -952,13 +959,15 @@ def generate_binder(
     )
 
     # Write output
-    write_html_file(final_html, output_file, force)
+    binder = write_html_file(final_html, output_file, force)
 
     # Copy assets once after all files processed (or before, doesn't matter)
     copy_assets_to_output(assets_path, final_assets_dir, force)
 
     # Write js helper file (do after copying assets in case it lives there)
     write_javascript_helper(content_dict, js_helper_path)
+
+    return binder
 
 
 # ============================================================================
@@ -1031,6 +1040,11 @@ def main():
         action="store_true",
         help="Suppress all non-error output (useful for scripting)",
     )
+    parser.add_argument(
+        "--browser",
+        action="store_true",
+        help="Open generated HTML file in user's default browser upon completion",
+    )
     parser.add_argument("--version", "-v", action="version", version=f"{__version__}")
     args = parser.parse_args()
 
@@ -1073,7 +1087,7 @@ def main():
     js_helper_path = final_assets_dir / "js/sections.js"
 
     # Process all the files
-    generate_binder(
+    binder = generate_binder(
         doc,
         output_dir / "binder.html",
         template_path,
@@ -1084,6 +1098,10 @@ def main():
         args.strict,
         document_mode,
     )
+
+    # optionally open in browser
+    if args.browser:
+        webbrowser.open(binder)
 
 
 if __name__ == "__main__":
