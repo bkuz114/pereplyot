@@ -175,6 +175,32 @@ def random_digit_string(x: int) -> str:
     return result
 
 
+def sequential_replacements(text: str, replacements: list[list[str, str]]) -> str:
+    """Apply a series of substring replacements
+
+    Each replacement replaces all occurrences of a substring before the next
+    replacement is applied. This means later replacements will operate on the
+    output of earlier ones, which can produce unexpected results when
+    replacements are not independent (e.g., swapping values or overlapping
+    patterns).
+
+    Args:
+        text: The input string to modify.
+        replacements: A list of [target, replacement] pairs. Each pair must
+            contain exactly two strings.
+
+    Returns:
+        The transformed string after applying all replacements in order.
+
+    Example:
+        >>> sequential_replacements("ab", [["a", "b"], ["b", "a"]])
+        "aa"  # Note: not "ba" due to sequential application.
+    """
+    for target, replacement in replacements:
+        text = text.replace(target, replacement)
+    return text
+
+
 # ============================================================================
 # MARKDOWN + YAML FRONTMATTER PROCESSING
 # ============================================================================
@@ -604,6 +630,7 @@ def convert_raw_text_to_html(raw_text: str) -> str:
         - Leading spaces/tabs on the FIRST line of a paragraph are preserved visually
           by converting each space to &nbsp; and each tab to 4 &nbsp;.
         - If the first line has no leading whitespace, no &nbsp; prefix is added.
+        - cyrillic style << >>, « » converted to <em> </em> tags
 
     Note:
         Only the first line of each paragraph is checked and prefixed. Leading
@@ -616,8 +643,17 @@ def convert_raw_text_to_html(raw_text: str) -> str:
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
     """
+
+    # replacements to make on the raw text
+    replacements = []
+
     # Normalize Windows line endings to Unix-style
-    raw_text = raw_text.replace("\r\n", "\n")
+    replacements.append(["\r\n", "\n"])
+
+    # convert << >>, « » to <em> </em>
+    replacements.extend([["<<", "<em>"], [">>", "</em>"], ["«", "<em>"], ["»", "</em>"]])
+
+    raw_text = sequential_replacements(raw_text, replacements)
 
     # Split on double newlines (blank lines) to identify paragraphs
     paragraphs = re.split(r"\n\s*\n", raw_text.strip())
