@@ -1,0 +1,68 @@
+{
+  "title": "Notes for the Stranger",
+  "root": "docs/",
+  "description": "A quiet reflection on documentation as empathy — small gifts for readers you will never meet",
+  "author": "E. M. Afternoon",
+  "parts": [
+    {
+      "name": "The Reader You Will Never Meet",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "11 PM on a Tuesday",
+          "files": ["01-11-pm-on-a-tuesday.txt"]
+        },
+        {
+          "number": 2,
+          "name": "Your Future Self Does Not Remember",
+          "files": ["02-your-future-self-does-not-remember.md"]
+        },
+        {
+          "number": 3,
+          "name": "The Myth of Obvious",
+          "files": ["03-the-myth-of-obvious.rtf"]
+        }
+      ]
+    },
+    {
+      "name": "Small Generosities",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The Comment That Prevented a Bug",
+          "files": ["04-the-comment-that-prevented-a-bug.txt"]
+        },
+        {
+          "number": 2,
+          "name": "Why, Not Just What",
+          "files": ["05-why-not-just-what.md"]
+        },
+        {
+          "number": 3,
+          "name": "A Warning Is a Gift",
+          "files": ["06-a-warning-is-a-gift.docx"]
+        }
+      ]
+    },
+    {
+      "name": "The Ripple",
+      "chapters": [
+        {
+          "number": 1,
+          "name": "The Person Who Never Thanks You",
+          "files": ["07-the-person-who-never-thanks-you.txt"]
+        },
+        {
+          "number": 2,
+          "name": "Documentation as Quiet Legacy",
+          "files": ["08-documentation-as-quiet-legacy.md"]
+        },
+        {
+          "number": 3,
+          "name": "What You Leave Behind",
+          "files": ["09-what-you-leave-behind.rtf"]
+        }
+      ]
+    }
+  ]
+}

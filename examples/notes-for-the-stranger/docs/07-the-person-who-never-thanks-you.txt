@@ -1,0 +1,13 @@
+The Person Who Never Thanks You
+
+You will never meet the person who benefits most from your documentation.
+
+They will not file an issue. They will not send a pull request. They will not star your repository or reply to your thread or buy you a coffee.
+
+They will simply not have a problem. They will read your note. They will understand. They will move on.
+
+That is success. The absence of confusion. The avoided question. The hour they did not lose.
+
+It is hard to feel good about something you never see. But try, anyway. Imagine a stranger, somewhere, nodding at their screen. Not frustrated. Not stuck. Just... moving forward.
+
+You did that. You will never know. And that is fine.

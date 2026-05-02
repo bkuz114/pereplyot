@@ -1,0 +1,11 @@
+The Comment That Prevented a Bug
+
+There is a bug that will never exist because someone wrote a comment.
+
+Not the bug they fixed. The bug that never happened. The edge case no one tripped over. The hour of debugging no one had to do.
+
+You will never know which comment saved which stranger. You will never get a notification. There is no metric for disaster averted.
+
+But somewhere, on a Tuesday night, a tired engineer scrolled past your comment and thought: *oh. right. that.* And they did not introduce the bug you foresaw. And they finished their work. And they went home.
+
+That is the invisible economy of documentation. You pay a small cost now. Someone collects an invisible benefit later. No receipt. No thank you. Just a world with slightly less frustration in it.

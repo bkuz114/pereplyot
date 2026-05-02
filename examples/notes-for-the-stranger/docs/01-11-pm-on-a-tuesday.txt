@@ -1,0 +1,11 @@
+11 PM on a Tuesday
+
+Someone is reading your code at 11 PM on a Tuesday. Their eyes are tired. Their battery is at 12%. They have been debugging a failure for three hours and they are not even sure it is your fault.
+
+They could be anywhere. A cramped apartment. A noisy coffee shop. A hospital waiting room. An office after everyone else went home.
+
+They do not know you. You do not know them.
+
+But right now, you are the only person who can help them. Not with a phone call. Not with an explanation you will never have time to give. With what you left behind. The comment you almost didn't write. The example you added because you thought "someone might need this." The warning you typed out of vague unease.
+
+That is the stranger. They are the reason documentation is not a chore. It is a letter you will never see opened.
