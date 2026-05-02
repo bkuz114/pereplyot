@@ -318,14 +318,13 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
         toc_entries: a list of dicts with keys: level, text, id.
     """
     toc_entries = []
-    # Create an h3 header for each chapter
-    # (revise later -- for now the styling works when only 1 depth)
+    # Create an h1 header for each chapter
     for chapter in doc.chapters:
         # get id attr that was added in
         id_attr = chapter.id_attr
         toc_entries.append(
             {
-                "level": 2,
+                "level": 1,
                 "text": chapter.name,
                 "id": id_attr,
             }

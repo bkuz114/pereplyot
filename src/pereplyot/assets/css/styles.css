@@ -289,17 +289,17 @@ body {
 
 /* TOC indentation levels */
 .toc-level-h2 {
-    padding-left: 0 !important;
+    padding-left: 1rem !important;
     font-weight: 500;
 }
 
 .toc-level-h3 {
-    padding-left: 1.5rem !important;
+    padding-left: 2rem !important;
     font-size: 0.85rem;
 }
 
 .toc-level-h4 {
-    padding-left: 2.5rem !important;
+    padding-left: 3rem !important;
     font-size: 0.8rem;
 }
 
