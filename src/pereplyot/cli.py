@@ -595,7 +595,7 @@ def convert_markdown_to_html(filepath: str, mode: int) -> str:
 
 def convert_raw_text_to_html(raw_text: str) -> str:
     """
-    Convert .txt file to HTML with paragraph preservation and exact leading whitespace.
+    Convert raw text string to HTML with paragraph preservation and exact leading whitespace.
 
     Behavior:
         - Splits text into paragraphs on double newlines (blank lines).
@@ -655,7 +655,8 @@ def convert_raw_text_to_html(raw_text: str) -> str:
 
 def convert_txt_to_html(filepath: Path) -> str:
     """
-    Convert .txt file to HTML with paragraph preservation and exact leading whitespace.
+    Convert .txt file to HTML.
+    (see docstring of convert_raw_text_to_html for formatting specifics)
 
     Args:
         filepath: Path to .txt file
