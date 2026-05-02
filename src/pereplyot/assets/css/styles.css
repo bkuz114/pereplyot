@@ -385,6 +385,16 @@ body {
     padding: 2rem;
 }
 
+/* basic version vertically center */
+.splash-container.basic {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+}
+
 .splash-card {
     max-width: 800px;
     width: 100%;
@@ -409,6 +419,12 @@ body {
     display: flex;
     padding: 0.5rem 0;
     border-bottom: 1px solid var(--border-light);
+}
+
+.basic .splash-title,
+.basic .splash-metadata-row {
+    border-bottom: none;
+    text-align: center;
 }
 
 .splash-metadata-label {

@@ -6,7 +6,7 @@ the documents.
 
 Usage:
     pereplyot INPUT [--output DIR] [--template FILE] [--force] [--strict]
-               [--quiet] [--clean] [--mode MODE] [--browser]
+               [--quiet] [--clean] [--mode MODE] [--browser] [--home HOMEPAGE_STYLE]
 
 Examples:
     # outputs to dist/binder.html
@@ -424,11 +424,12 @@ def write_html_file(content: str, output: Path, force: bool) -> Path:
     return output
 
 
-def create_home(doc: Document) -> str:
+def create_home(doc: Document, style: str) -> str:
     """Creates HTML for initial page load splash screen.
 
     Args:
         doc: Document object generated from inputfile JSON.
+        style: string indicating what style (options: basic, descriptive)
 
     Returns:
         HTML string for the home page with centered layout and metadata display.
@@ -495,7 +496,7 @@ def create_home(doc: Document) -> str:
         else ""
     )
 
-    return f"""
+    homepage_descriptive = f"""
     <div class="splash-container">
         <div class="splash-card">
             <h1 class="splash-title">{title}</h1>
@@ -512,6 +513,21 @@ def create_home(doc: Document) -> str:
         </div>
     </div>
     """
+
+    homepage_basic = f"""
+        <div class="splash-container basic">
+            <h1 class="splash-title">{title}</h1>
+
+            <div class="splash-meta">
+                {metadata_html}
+            </div>
+        </div>
+        """
+
+    if style == "basic":
+        return homepage_basic
+    else:
+        return homepage_descriptive
 
 
 def convert_markdown_to_html(filepath: str, mode: int) -> str:
@@ -990,6 +1006,7 @@ def generate_binder(
     force: bool,
     strict: bool,
     mode: int,
+    home_style: str,
 ) -> Path:
     """
     Creates HTML site from list of files in JSON inputfile.
@@ -1010,6 +1027,7 @@ def generate_binder(
               doc title extracted from first h1 if not in frontmatter.
             - Wiki mode: All h1s as normal headings in TOC; doc title
               based on filename if not in frontmatter.
+        home_style: str indicating style for homepage ("basic", "descriptive")
 
     Returns:
         Path to generated file
@@ -1045,7 +1063,7 @@ def generate_binder(
     toc = create_toc(doc)
 
     # create splash page to load on page load
-    splash_html = create_home(doc)
+    splash_html = create_home(doc, home_style)
 
     # add splash page HTML to content dict
     # (don't change "start"! scripts.js depends on it)
@@ -1147,6 +1165,13 @@ def main():
         action="store_true",
         help="Open generated HTML file in user's default browser upon completion",
     )
+    parser.add_argument(
+        "--home",
+        type=str,
+        choices=["basic", "descriptive"],
+        default="descriptive",
+        help="Style of splash page",
+    )
     parser.add_argument("--version", "-v", action="version", version=f"{__version__}")
     args = parser.parse_args()
 
@@ -1199,6 +1224,7 @@ def main():
         args.force,
         args.strict,
         document_mode,
+        args.home,
     )
 
     # optionally open in browser
