@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pereplyot"
 dynamic = ["version"]
-description = "Bundle multiple documents (.txt, .md, .docx) into a single, beautiful HTML viewer with hierarchical table of contents and smooth content switching."
+description = "Bundle multiple documents (.txt, .md, .docx, and .rtf) into a single, beautiful HTML viewer with hierarchical table of contents and smooth content switching."
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}

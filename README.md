@@ -3,11 +3,11 @@
 [![PyPI version](https://badge.fury.io/py/pereplyot.svg)](https://pypi.org/project/pereplyot/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pereplyot.svg)](https://pypi.org/project/pereplyot/)
 
-Bundle multiple documents (.txt, .md, .docx) into a single, beautiful HTML viewer with hierarchical table of contents and smooth content switching.
+Bundle multiple documents (.txt, .md, .docx, and .rtf) into a single, beautiful HTML viewer with hierarchical table of contents and smooth content switching.
 
 ## Features
 
-- **Multiple file types** – Supports `.txt`, `.md`, and `.docx`
+- **Multiple file types** – Supports `.txt`, `.md`, `.docx`, and `.rtf`
 - **JSON manifest** – Define document structure (chapters → files)
 - **Single HTML output** – Everything in one file (plus shared assets)
 - **Hierarchical TOC** – One entry per chapter, clean navigation
@@ -116,6 +116,7 @@ pereplyot examples/the-fishing-book/manifest.json
 | `.txt` | Plain text | Wrapped in `<p>` tags |
 | `.md` | Markdown | Converted to HTML via python-markdown |
 | `.docx` | Microsoft Word | Converted via python-docx |
+| `.rtf` | Microsoft rtf | Converted via rtfparse |
 
 ## Output Structure
 
@@ -195,3 +196,4 @@ MIT License – see [LICENSE](LICENSE) file for details.
 - Document conversion via [python-docx](https://python-docx.readthedocs.io/)
 - Template rendering inherited from [renderkind](https://github.com/bkuz114/renderkind)
 - JSON parsing via vendored [inputfile-parser](https://github.com/bkuz114/inputfile-parser)
+- rtf parsing via rtfparse [rtfparse](https://pypi.org/project/rtfparse/)
