@@ -302,8 +302,8 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
 
     -- Connection to javascript / How the TOC works --
 
-    1. Each TOC entry corresponds to a Chapter
-    2. href attr assigned to Chapter's id_attr,
+    1. Each TOC entry corresponds to a Part or Chapter
+    2. href attr assigned to Part or Chapters id_attr,
        a unique integer string assigned during 'process_files'
     3. That id_attr is also stored as a key in a dictionary
        that gets written to a javascript file; it's value
@@ -318,9 +318,14 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
         toc_entries: a list of dicts with keys: level, text, id.
     """
     toc_entries = []
-    # Create an h1 header for each chapter
+
+    # Document is either flat (chapters only)
+    # or heirarchical (parts + chapters)
+    # either .chapters or .parts attr is populated, not both
+
+    # Flat structure: (no parts)
     for chapter in doc.chapters:
-        # get id attr that was added in
+        # get id attr assigned during process_files
         id_attr = chapter.id_attr
         toc_entries.append(
             {
@@ -329,6 +334,26 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
                 "id": id_attr,
             }
         )
+
+    # Heirarchical structure: (has parts)
+    for part in doc.parts:
+        part_id = part.id_attr
+        toc_entries.append(
+            {
+                "level": 1,
+                "text": part.name,
+                "id": part_id,
+            }
+        )
+        for chapter in part.chapters:
+            chapter_id = chapter.id_attr
+            toc_entries.append(
+                {
+                    "level": 2,
+                    "text": chapter.name,
+                    "id": chapter_id,
+                }
+            )
     return toc_entries
 
 
@@ -982,7 +1007,7 @@ def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int
 
 def process_chapters(
     chapters: List[Chapter], mode: str, strict: bool
-) -> Tuple[Dict[str, str], int]:
+) -> Tuple[Dict[str, str], int, str]:
     """
     Iterates through a list of Chapter obejcts (coming from Document -- the object
     created from input JSON manifest file), raw content,
@@ -1001,16 +1026,21 @@ def process_chapters(
             If False, log errors and continue processing remaining files.
 
     Returns:
-        Tuple with two objects:
+        Tuple with three objects:
         1. dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
            - unique_ID: an id generated for the constructed chapter
            - HTML_content: HTML string of all data for a chapter (chapters
            can have multiple files)
         2. count of files that failed to procss
+        3. str it of first chapter (so part can open to its content)
     """
 
     html = {}
     failed_count = 0
+
+    # send back first chapter id so parts can reference it
+    # (as a part will open to its first chapter)
+    first_chapter_id = ""
 
     for i, chapter in enumerate(chapters):
         chapter_html, failed_files = process_chapter(chapter, mode, strict)
@@ -1023,7 +1053,10 @@ def process_chapters(
         chapter.id_attr = id_attr
         # add to main content html
         html[id_attr] = chapter_html
-    return html, failed_count
+        # save first chapter
+        if i == 0:
+            first_chapter_id = id_attr
+    return html, failed_count, first_chapter_id
 
 
 def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
@@ -1045,13 +1078,39 @@ def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
         - HTML_content: HTML string of all data for a chapter (chapters
           can have multiple files)
     """
+    # Document has either "parts" or "chapter" list populated, but not both
 
     # dictionary to send to javascript for dynamically opening
     # content when user clicks a TOC link
     html_dict = {}
     total_failed = 0
 
-    html_dict, total_failed = process_chapters(doc.chapters, mode, strict)
+    # Scenario 1: has parts
+    for part in doc.parts:
+        chapters_html, chapters_failed_count, first_chapter_id = process_chapters(
+            part.chapters, mode, strict
+        )
+        # assign unique id for the part
+        part_id = random_digit_string(5)
+        # add part id as key to html_dict: its value
+        # will be the HTML content it opens to --
+        # should be the first chapter in this part
+        html_dict[part_id] = chapters_html[first_chapter_id]
+        # add id to Part obj for when making TOC
+        # (will get set as its href attr; js will
+        # use that to open the content at that val
+        # in the dictionary)
+        part.id_attr = part_id
+        total_failed += chapters_failed_count
+        # add next set of chapter id / contents to html dictionary for js
+        html_dict = html_dict | chapters_html
+
+    # Scenario 2: flat structure (only chapters, no parts)
+    if doc.chapters:
+        # only html_dict and total_failed are needed
+        html_dict, total_failed, first_chapter = process_chapters(
+            doc.chapters, mode, strict
+        )
 
     logger.info(
         f"\n✅ Processed {len(doc.files) - total_failed} of {len(doc.files)} files"
