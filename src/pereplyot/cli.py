@@ -930,15 +930,107 @@ const SECTION_CONTENT = {content_json};
 # ============================================================================
 
 
-def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
+def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int]:
     """
-    Iterates through each file in the JSON document, gets raw content,
+    Generates HTML content for a single Chapter (which can be
+    comprised of multiple FileRef objects)
+
+    Arguments
+        chapter: Chapter to get HTML string for
+            (Note: Chapter objects are part of a Document object -- the object
+            created via inputfile.py when pasing manifest JSON)
+        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
+            (legacy option ported from renderkind; don't remove yet)
+        strict: boolean if True, fail on any file processing failure
+
+    Returns
+        Tuple of [str, int]: HTML content + number of failed files
+    """
+
+    html = ""
+    failed_count = 0
+
+    for i, fileRef in enumerate(chapter.files):
+        try:
+            # HTML for this file
+            file_html = ""
+            filepath = fileRef.path
+            file_ext = filepath.suffix.lower()
+            if file_ext == ".txt":
+                file_html = convert_txt_to_html(filepath)
+            elif file_ext == ".docx":
+                file_html = convert_docx_to_html(filepath)
+            elif file_ext == ".rtf":
+                file_html = convert_rtf_to_html(filepath)
+            elif file_ext == ".markdown" or file_ext == ".md":
+                file_html = convert_markdown_to_html(filepath, mode)
+            file_html = post_process_file_html(file_html)
+
+            # add <hr> if multiple files
+            if i > 0:
+                html += "<hr>"
+            html += file_html
+
+        except Exception as e:
+            logger.error(f"   ❌ Failed: {fileRef.path} - {e}")
+            failed_count += 1
+            if strict:
+                raise  # Fail fast in strict mode
+
+        return html, failed_count
+
+
+def process_chapters(
+    chapters: List[Chapter], mode: str, strict: bool
+) -> Tuple[Dict[str, str], int]:
+    """
+    Iterates through a list of Chapter obejcts (coming from Document -- the object
+    created from input JSON manifest file), raw content,
     converts it to an HTML string, and returns a dictionary of that content
     (mapped to unique keys)
 
     The HTML strings generated will NOT get embedded into final HTML file;
     the dictionary returned by this function instead gets written to a javscript
     file, and javscript dynamically loads the content when user clicks TOC links
+
+    Args:
+        doc: Document object generated from input JSON file.
+        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
+            (legacy option ported from renderkind; don't remove yet)
+        strict: If True, abort on first error and re-raise the exception.
+            If False, log errors and continue processing remaining files.
+
+    Returns:
+        Tuple with two objects:
+        1. dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
+           - unique_ID: an id generated for the constructed chapter
+           - HTML_content: HTML string of all data for a chapter (chapters
+           can have multiple files)
+        2. count of files that failed to procss
+    """
+
+    html = {}
+    failed_count = 0
+
+    for i, chapter in enumerate(chapters):
+        chapter_html, failed_files = process_chapter(chapter, mode, strict)
+        failed_count += failed_files
+        # post-process (Add title, etc)
+        chapter_name = f"Chapter: {chapter.name}"
+        # wrap in div and get the id attr assigned to it
+        chapter_html, id_attr = post_process_chapter_html(chapter_html, chapter_name)
+        # modify the Chapter object to have the id attr
+        chapter.id_attr = id_attr
+        # add to main content html
+        html[id_attr] = chapter_html
+    return html, failed_count
+
+
+def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
+    """
+    Returns a dictionary mapping unique chapter ids to the HTML content
+    created for that chapter (made up of its individual files, converted
+    to HTML strings)
 
     Args:
         doc: Document object generated from input JSON file.
@@ -954,52 +1046,20 @@ def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
           can have multiple files)
     """
 
-    html = {}
-    failed_count = 0
-    for i, chapter in enumerate(doc.chapters):
-        chapter_html = ""
-        for j, fileRef in enumerate(chapter.files):
-            try:
-                # HTML for this file
-                file_html = ""
-                filepath = fileRef.path
-                file_ext = filepath.suffix.lower()
-                if file_ext == ".txt":
-                    file_html = convert_txt_to_html(filepath)
-                elif file_ext == ".docx":
-                    file_html = convert_docx_to_html(filepath)
-                elif file_ext == ".rtf":
-                    file_html = convert_rtf_to_html(filepath)
-                elif file_ext == ".markdown" or file_ext == ".md":
-                    file_html = convert_markdown_to_html(filepath, mode)
-                file_html = post_process_file_html(file_html)
+    # dictionary to send to javascript for dynamically opening
+    # content when user clicks a TOC link
+    html_dict = {}
+    total_failed = 0
 
-                # add <hr> if multiple files
-                if j > 0:
-                    chapter_html += "<hr>"
-                chapter_html += file_html
-
-            except Exception as e:
-                logger.error(f"   ❌ Failed: {fileRef.path} - {e}")
-                failed_count += 1
-                if strict:
-                    raise  # Fail fast in strict mode
-        # post-process (Add title, etc)
-        chapter_name = f"Chapter: {chapter.name}"
-        # wrap in div and get the id attr assigned to it
-        chapter_html, id_attr = post_process_chapter_html(chapter_html, chapter_name)
-        # modify the Chapter object to have the id attr
-        chapter.id_attr = id_attr
-        # add to main content html
-        html[id_attr] = chapter_html
+    html_dict, total_failed = process_chapters(doc.chapters, mode, strict)
 
     logger.info(
-        f"\n✅ Processed {len(doc.files) - failed_count} of {len(doc.files)} files"
+        f"\n✅ Processed {len(doc.files) - total_failed} of {len(doc.files)} files"
     )
-    if failed_count > 0 and not strict:
-        logger.error(f"   ⚠️  {failed_count} file(s) failed")
+    if total_failed > 0 and not strict:
+        logger.error(f"   ⚠️  {total_failed} file(s) failed")
 
-    return html
+    return html_dict
 
 
 def generate_binder(
