@@ -15,6 +15,10 @@
     {
       "name": "The Ethics of Catch and Release",
       "files": ["03-catch-and-release.txt"]
+    },
+    {
+      "name": "The Weather Whisperer",
+      "files": ["04-the-weather-whisperer.rtf"]
     }
   ]
 }
