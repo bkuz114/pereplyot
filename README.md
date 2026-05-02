@@ -197,3 +197,4 @@ MIT License – see [LICENSE](LICENSE) file for details.
 - Template rendering inherited from [renderkind](https://github.com/bkuz114/renderkind)
 - JSON parsing via vendored [inputfile-parser](https://github.com/bkuz114/inputfile-parser)
 - rtf parsing via rtfparse [rtfparse](https://pypi.org/project/rtfparse/)
+- docx parsing via mammoth [mammoth](https://pypi.org/project/mammoth/)
