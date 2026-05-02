@@ -945,10 +945,7 @@ def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
         mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            - Github mode: First h1 gets up-arrow anchored to #top in TOC;
-              doc title extracted from first h1 if not in frontmatter.
-            - Wiki mode: All h1s as normal headings in TOC; doc title
-              based on filename if not in frontmatter.
+            (legacy option ported from renderkind; don't remove yet)
 
     Returns:
         a dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
