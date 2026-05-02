@@ -298,7 +298,17 @@ def render_toc(toc_entries: List[Dict], mode: int, current_depth: int = 1) -> st
 
 def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
     """
-    Build TOC entries for the document
+    Build TOC entries for the document.
+
+    -- Connection to javascript / How the TOC works --
+
+    1. Each TOC entry corresponds to a Chapter
+    2. href attr assigned to Chapter's id_attr,
+       a unique integer string assigned during 'process_files'
+    3. That id_attr is also stored as a key in a dictionary
+       that gets written to a javascript file; it's value
+       is the HTML content that should be loaded when user
+       clicks on that TOC link.
 
     Args:
         doc: Document object generated from inputfile JSON
