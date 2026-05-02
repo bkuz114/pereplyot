@@ -34,6 +34,9 @@ import yaml
 import markdown
 import webbrowser
 from bs4 import BeautifulSoup
+from rtfparse.parser import Rtf_Parser
+from rtfparse.renderers.html_decapsulator import HTML_Decapsulator
+from io import StringIO
 import logging
 
 # Allow direct execution from source during development (e.g., `python cli.py`)
@@ -123,6 +126,8 @@ def setup_logging(quiet: bool = False):
         format="%(message)s",  # Just the message, no extra prefix
         stream=sys.stdout,
     )
+    # suppress logs from rtfparse module
+    logging.getLogger("rtfparse").setLevel(logging.CRITICAL)
 
 
 # Get module logger
@@ -538,7 +543,7 @@ def convert_markdown_to_html(filepath: str, mode: int) -> str:
     return raw_html
 
 
-def convert_txt_to_html(filepath: Path) -> str:
+def convert_raw_text_to_html(raw_text: str) -> str:
     """
     Convert .txt file to HTML with paragraph preservation and exact leading whitespace.
 
@@ -556,20 +561,11 @@ def convert_txt_to_html(filepath: Path) -> str:
         wrapped lines, not intentional indentation).
 
     Args:
-        filepath: Path to .txt file
+        raw_text: string to convert to HTML
 
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
-
-    Raises:
-        Exception: If file does not exist or is not a .txt file.
     """
-    if not filepath.exists():
-        raise Exception(f".txt file {filepath} does not exist!")
-    if not filepath.suffix == ".txt":
-        raise Exception(f"File is not .txt! {filepath}")
-
-    raw_text = read_file(filepath)
     # Normalize Windows line endings to Unix-style
     raw_text = raw_text.replace("\r\n", "\n")
 
@@ -607,6 +603,28 @@ def convert_txt_to_html(filepath: Path) -> str:
     return "\n".join(html_parts)
 
 
+def convert_txt_to_html(filepath: Path) -> str:
+    """
+    Convert .txt file to HTML with paragraph preservation and exact leading whitespace.
+
+    Args:
+        filepath: Path to .txt file
+
+    Returns:
+        HTML string with paragraphs, line breaks, and preserved leading indentation.
+
+    Raises:
+        Exception: If file does not exist or is not a .txt file.
+    """
+    if not filepath.exists():
+        raise Exception(f".txt file {filepath} does not exist!")
+    if not filepath.suffix == ".txt":
+        raise Exception(f"File is not .txt! {filepath}")
+
+    raw_text = read_file(filepath)
+    return convert_raw_text_to_html(raw_text)
+
+
 def convert_docx_to_html(filepath: Path) -> str:
     """
     Convert .docx file to HTML
@@ -628,6 +646,38 @@ def convert_docx_to_html(filepath: Path) -> str:
         full_text.append(para.text)
     raw_content = "\n".join(full_text)
     return raw_content
+
+
+def convert_rtf_to_html(filepath: Path) -> str:
+    """
+    Convert Microsoft .rtf file to HTML. Experimental -- use at own risk.
+
+    Limitations:
+    - formatting (bold, italic, etc.) NOT preserved
+    - certain complex writeups will fail (e.g. write plaintext in Word ->
+      save as rtf -> likely fails)
+    - certain chars do not render (emdash, etc.)
+
+    Args:
+        filepath: Path to .docx file
+
+    Returns:
+        HTML string
+    """
+    if not filepath.exists():
+        raise Exception(f".docx file {filepath} does not exist!")
+    if not filepath.suffix == ".rtf":
+        raise Exception(f"File is not .rtf! {filepath}")
+
+    parser = Rtf_Parser(rtf_path=filepath)
+    parsed = parser.parse_file()
+    # Render to HTML (returns internal format)
+    renderer = HTML_Decapsulator()
+    # convert to HTML string
+    buffer = StringIO()
+    renderer.render(parsed, buffer)
+    text_string = buffer.getvalue()
+    return convert_raw_text_to_html(text_string)
 
 
 def post_process_file_html(html: str) -> str:
@@ -897,6 +947,8 @@ def process_files(doc: Document, mode, strict: bool) -> Dict[str, str]:
                     file_html = convert_txt_to_html(filepath)
                 elif file_ext == ".docx":
                     file_html = convert_docx_to_html(filepath)
+                elif file_ext == ".rtf":
+                    file_html = convert_rtf_to_html(filepath)
                 elif file_ext == ".markdown" or file_ext == ".md":
                     file_html = convert_markdown_to_html(filepath, mode)
                 file_html = post_process_file_html(file_html)

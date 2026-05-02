@@ -2,3 +2,4 @@ python-docx
 markdown>=3.5
 beautifulsoup4>=4.12
 pyyaml>=6.0
+rtfparse>=0.9.5
