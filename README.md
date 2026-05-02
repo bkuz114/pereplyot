@@ -57,6 +57,12 @@ pereplyot manifest.json --browser
 pereplyot manifest.json --template my-template.html
 ```
 
+### Minimal "home" screen with only title, author
+
+```bash
+pereplyot manifest.json --home basic
+```
+
 ## Manifest Format
 
 Create a JSON file defining your document structure:
