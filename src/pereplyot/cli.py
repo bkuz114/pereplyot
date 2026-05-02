@@ -656,7 +656,7 @@ def convert_raw_text_to_html(raw_text: str) -> str:
     raw_text = sequential_replacements(raw_text, replacements)
 
     # Split on double newlines (blank lines) to identify paragraphs
-    paragraphs = re.split(r"\n\s*\n", raw_text.strip())
+    paragraphs = re.split(r"\n\s*\n", raw_text)
 
     html_parts = []
     for para in paragraphs:
