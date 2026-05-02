@@ -25,7 +25,7 @@ import sys
 import argparse
 import re
 import random
-from docx import Document as Docx
+import mammoth
 import json
 import shutil
 from pathlib import Path
@@ -627,7 +627,8 @@ def convert_txt_to_html(filepath: Path) -> str:
 
 def convert_docx_to_html(filepath: Path) -> str:
     """
-    Convert .docx file to HTML
+    Convert a .docx file to HTML, preserving headings, lists, bold/italic,
+    tables, and basic structure.
 
     Args:
         filepath: Path to .docx file
@@ -639,13 +640,11 @@ def convert_docx_to_html(filepath: Path) -> str:
         raise Exception(f".docx file {filepath} does not exist!")
     if not filepath.suffix == ".docx":
         raise Exception(f"File is not .docx! {filepath}")
-    # must loop through all paragraphs to get all text
-    doc = Docx(filepath)
-    full_text = []
-    for para in doc.paragraphs:
-        full_text.append(para.text)
-    raw_content = "\n".join(full_text)
-    return raw_content
+    result = mammoth.convert_to_html(filepath)
+    # Log any warnings (e.g., unrecognized styles)
+    for message in result.messages:
+        logger.warning(f"⚠️  Warning: [mammoth] {message}")
+    return result.value
 
 
 def convert_rtf_to_html(filepath: Path) -> str:
