@@ -651,7 +651,9 @@ def convert_raw_text_to_html(raw_text: str) -> str:
     replacements.append(["\r\n", "\n"])
 
     # convert << >>, « » to <em> </em>
-    replacements.extend([["<<", "<em>"], [">>", "</em>"], ["«", "<em>"], ["»", "</em>"]])
+    replacements.extend(
+        [["<<", "<em>"], [">>", "</em>"], ["«", "<em>"], ["»", "</em>"]]
+    )
 
     raw_text = sequential_replacements(raw_text, replacements)
 
