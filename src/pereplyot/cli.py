@@ -702,16 +702,18 @@ def convert_raw_text_to_html(raw_text: str) -> str:
         # preserve leading whitespace in lines
         for i, line in enumerate(lines):
             preserve_prefix = ""
+            num_spaces = 0
             # check if first char in line is whitespace
             if line and line[0] in (" ", "\t"):
                 # Convert leading spaces/tabs to &nbsp; entities
                 for ch in line:
                     if ch == " ":
-                        preserve_prefix += "&nbsp;"
+                        num_spaces += 1
                     elif ch == "\t":
-                        preserve_prefix += "&nbsp;" * 4
+                        num_spaces += 4
                     else:
                         break  # Stop at first non-whitespace character
+                preserve_prefix += "&nbsp;" * num_spaces
             lines[i] = f"{preserve_prefix}{line}"
 
         # Rebuild paragraph with <br> for newlines
