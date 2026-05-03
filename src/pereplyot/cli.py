@@ -6,7 +6,7 @@ the documents.
 
 Usage:
     pereplyot INPUT [--output DIR] [--template FILE] [--force] [--strict]
-               [--quiet] [--clean] [--mode MODE] [--browser] [--home HOMEPAGE_STYLE]
+               [--quiet] [--clean] [--browser] [--home HOMEPAGE_STYLE]
 
 Examples:
     # outputs to dist/binder.html
@@ -108,9 +108,6 @@ MD_EXTENSIONS = [
     "codehilite",
     "smarty",
 ]
-
-# document mode mapping
-MODE_MAPPING = {"auto": 0, "wiki": 1, "github": 2}
 
 # ============================================================================
 # LOGGING
@@ -265,19 +262,16 @@ def parse_frontmatter(content: str) -> tuple[dict, str]:
 # ============================================================================
 
 
-def render_toc(toc_entries: List[Dict], mode: int, current_depth: int = 1) -> str:
+def render_toc(toc_entries: List[Dict], main_toc: bool = False) -> str:
     """
-    Render TOC entries as nested HTML list based on document mode.
+    Render TOC entries as nested HTML list
 
     Args:
         toc_entries: List of dicts with 'level', 'text', 'id' keys
             - 'level': corresponds to css class for indenting
             - 'text': text to dispaly for that entry
             - 'id': tag id it maps to
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            - Github mode: First h1 gets up-arrow anchored to #top in TOC
-            - Wiki mode: All h1s as normal headings. Back to top link before all
-        current_depth: Starting depth (default 1, for h1)
+        main_toc: boolean indicating if main TOC
 
     Returns:
         HTML string of nested <ul> and <li> elements
@@ -292,34 +286,67 @@ def render_toc(toc_entries: List[Dict], mode: int, current_depth: int = 1) -> st
 
     html = '<ul class="toc-list">\n'
 
-    # counter to offset which css styling class to use for heading entries
-    # (wiki docs should use toc-level-h2 for h1, toc-level-h3 for h2, etc.)
-    offset = 0
-
-    # wiki mode: create anchor to top of document
-    if mode == 1:
-        html += (
-            f'  <li><a href="#start" class="toc-level-h1 top-link">↑ Start</a></li>\n'
-        )
-        offset = 1
+    # Create anchor to top of document
+    anchor = "#top"
+    link_text = "Top"
+    if main_toc:
+        anchor = "#start"
+        link_text = "Start"
+    html += f'  <li><a href="{anchor}" class="toc-level-h1 top-link">↑ {link_text}</a></li>\n'
 
     # create <li> for each heading
     for entry in entries:
         level = entry["level"]
         text = entry["text"]
         anchor_id = entry["id"]
-        level_class = f"toc-level-h{level + offset}"
-
-        if level == 1 and mode == 2 and entry == entries[0]:
-            # First h1 in document mode: up-arrow
-            # Back to top link (uses #top anchor from <html id="top">)
-            html += f'  <li><a href="#top" class="toc-level-h1 top-link">↑ {text}</a></li>\n'
-        else:
-            # Wiki mode or non-first h1 in document mode (shouldn't happen)
-            html += f'  <li><a href="#{anchor_id}" class="{level_class} chap-link">{text}</a></li>\n'
+        level_class = f"toc-level-h{level}"
+        html += f'  <li><a href="#{anchor_id}" class="{level_class} chap-link">{text}</a></li>\n'
 
     html += "</ul>\n"
     return html
+
+
+def create_chapter_toc_entries(
+    html_content: str, max_depth: int = 4
+) -> Tuple[str, List[Dict]]:
+    """
+    Parse HTML, add missing IDs to headings, and build TOC structure.
+
+    Args:
+        html_content: HTML string from markdown conversion.
+        max_depth: Maximum heading level to include (1-4).
+
+    Returns:
+        Tuple of (modified_html, toc_entries) where toc_entries is a list of
+        dicts with keys: level, text, id.
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+    toc_entries = []
+
+    # Find all headings
+    for heading in soup.find_all(["h1", "h2", "h3", "h4"]):
+        level = int(heading.name[1])
+        if level > max_depth:
+            continue
+
+        # Ensure heading has an ID
+        heading_id = heading.get("id")
+        if not heading_id:
+            # Generate an ID from text content
+            text = heading.get_text(strip=True)
+            heading_id = re.sub(r"[^a-z0-9]+", "-", text.lower())
+            heading_id = re.sub(r"^-|-$", "", heading_id)
+            heading["id"] = heading_id
+
+        toc_entries.append(
+            {
+                "level": level,
+                "text": heading.get_text(strip=True),
+                "id": heading.get("id"),
+            }
+        )
+
+    return str(soup), toc_entries
 
 
 def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
@@ -385,7 +412,7 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
 
 def create_toc(doc: Document) -> str:
     toc_entries = create_toc_entries(doc, TOC_MAX_DEPTH)
-    return render_toc(toc_entries, 1)
+    return render_toc(toc_entries, True)
 
 
 # ============================================================================
@@ -590,15 +617,12 @@ def create_home(doc: Document, style: str) -> str:
         return homepage_descriptive
 
 
-def convert_markdown_to_html(filepath: str, mode: int) -> str:
+def convert_markdown_to_html(filepath: str) -> str:
     """
     Convert Markdown file to HTML using python-markdown.
 
     Args:
         filepath: Path to a .md file
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            - Github mode: First h1 gets up-arrow anchored to #top in TOC
-            - Wiki mode: All h1s as normal headings in TOC.
 
     Returns: HTML string with heading IDs added
     """
@@ -940,7 +964,9 @@ def get_asset_path_prefix(html_path: Path, assets_dir: Path) -> str:
     return rel_path.replace("\\", "/") + "/"
 
 
-def write_javascript_helper(html_data: Dict[str, str], filepath: Path) -> None:
+def write_javascript_helper(
+    html_data: Dict[str, str], toc_data: Dict[str, str], filepath: Path
+) -> None:
     """
     Write a JavaScript helper file that maps section IDs to HTML content.
 
@@ -977,12 +1003,15 @@ def write_javascript_helper(html_data: Dict[str, str], filepath: Path) -> None:
     # Serialize the dictionary to a compact JSON string
     # Using ensure_ascii=False preserves Unicode characters in content
     content_json = json.dumps(html_data, ensure_ascii=False)
+    toc_json = json.dumps(toc_data, ensure_ascii=False)
 
     # Write the JavaScript file with the global object declaration
     js_content = f"""// Auto-generated by write_javascript_helper()
 // Do not edit directly. Regenerate from source data.
 
 const SECTION_CONTENT = {content_json};
+
+const SECTION_TOC = {toc_json};
 """
 
     with open(filepath, "w", encoding="utf-8") as f:
@@ -994,7 +1023,7 @@ const SECTION_CONTENT = {content_json};
 # ============================================================================
 
 
-def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int]:
+def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
     """
     Generates HTML content for a single Chapter (which can be
     comprised of multiple FileRef objects)
@@ -1003,8 +1032,6 @@ def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int
         chapter: Chapter to get HTML string for
             (Note: Chapter objects are part of a Document object -- the object
             created via inputfile.py when pasing manifest JSON)
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            (legacy option ported from renderkind; don't remove yet)
         strict: boolean if True, fail on any file processing failure
 
     Returns
@@ -1027,7 +1054,7 @@ def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int
             elif file_ext == ".rtf":
                 file_html = convert_rtf_to_html(filepath)
             elif file_ext == ".markdown" or file_ext == ".md":
-                file_html = convert_markdown_to_html(filepath, mode)
+                file_html = convert_markdown_to_html(filepath)
             file_html = post_process_file_html(file_html)
 
             # add <hr> if multiple files
@@ -1045,8 +1072,8 @@ def process_chapter(chapter: Chapter, mode: int, strict: bool) -> Tuple[str, int
 
 
 def process_chapters(
-    chapters: List[Chapter], mode: str, strict: bool
-) -> Tuple[Dict[str, str], int, str]:
+    chapters: List[Chapter], strict: bool
+) -> Tuple[Dict[str, str], Dict[str, str], int, str]:
     """
     Iterates through a list of Chapter obejcts (coming from Document -- the object
     created from input JSON manifest file), raw content,
@@ -1059,8 +1086,6 @@ def process_chapters(
 
     Args:
         doc: Document object generated from input JSON file.
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            (legacy option ported from renderkind; don't remove yet)
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
 
@@ -1075,6 +1100,7 @@ def process_chapters(
     """
 
     html = {}
+    tocs = {}
     failed_count = 0
 
     # send back first chapter id so parts can reference it
@@ -1082,7 +1108,7 @@ def process_chapters(
     first_chapter_id = ""
 
     for i, chapter in enumerate(chapters):
-        chapter_html, failed_files = process_chapter(chapter, mode, strict)
+        chapter_html, failed_files = process_chapter(chapter, strict)
         failed_count += failed_files
         # post-process (Add title, etc)
         chapter_name = f"Chapter: {chapter.name}"
@@ -1090,15 +1116,19 @@ def process_chapters(
         chapter_html, id_attr = post_process_chapter_html(chapter_html, chapter_name)
         # modify the Chapter object to have the id attr
         chapter.id_attr = id_attr
+        # create a TOC for the chapter with ids added in
+        chapter_html, chapter_toc_entries = create_chapter_toc_entries(chapter_html)
+        chapter_toc = render_toc(chapter_toc_entries)
         # add to main content html
         html[id_attr] = chapter_html
+        tocs[id_attr] = chapter_toc
         # save first chapter
         if i == 0:
             first_chapter_id = id_attr
-    return html, failed_count, first_chapter_id
+    return html, tocs, failed_count, first_chapter_id
 
 
-def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
+def process_files(doc: Document, strict: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
     """
     Returns a dictionary mapping unique chapter ids to the HTML content
     created for that chapter (made up of its individual files, converted
@@ -1108,8 +1138,6 @@ def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
         doc: Document object generated from input JSON file.
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            (legacy option ported from renderkind; don't remove yet)
 
     Returns:
         a dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
@@ -1126,8 +1154,8 @@ def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
 
     # Scenario 1: has parts
     for part in doc.parts:
-        chapters_html, chapters_failed_count, first_chapter_id = process_chapters(
-            part.chapters, mode, strict
+        chapters_html, chapters_tocs, chapters_failed_count, first_chapter_id = (
+            process_chapters(part.chapters, strict)
         )
         # assign unique id for the part
         part_id = random_digit_string(5)
@@ -1147,8 +1175,8 @@ def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
     # Scenario 2: flat structure (only chapters, no parts)
     if doc.chapters:
         # only html_dict and total_failed are needed
-        html_dict, total_failed, first_chapter = process_chapters(
-            doc.chapters, mode, strict
+        html_dict, chapters_tocs, total_failed, first_chapter = process_chapters(
+            doc.chapters, strict
         )
 
     logger.info(
@@ -1157,7 +1185,7 @@ def process_files(doc: Document, mode: str, strict: bool) -> Dict[str, str]:
     if total_failed > 0 and not strict:
         logger.error(f"   ⚠️  {total_failed} file(s) failed")
 
-    return html_dict
+    return html_dict, chapters_tocs
 
 
 def generate_binder(
@@ -1169,7 +1197,6 @@ def generate_binder(
     js_helper_path: Path,
     force: bool,
     strict: bool,
-    mode: int,
     home_style: str,
 ) -> Path:
     """
@@ -1186,11 +1213,6 @@ def generate_binder(
             FileExistsError when output already exists.
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
-        mode: int indicating document type. Options: 1 (github style), 2 (wiki style)
-            - Github mode: First h1 gets up-arrow anchored to #top in TOC;
-              doc title extracted from first h1 if not in frontmatter.
-            - Wiki mode: All h1s as normal headings in TOC; doc title
-              based on filename if not in frontmatter.
         home_style: str indicating style for homepage ("basic", "descriptive")
 
     Returns:
@@ -1221,7 +1243,7 @@ def generate_binder(
     #
     # Note: process_files modifies doc to add the id for created chapter div
     # to each Chapter obj, which is how TOC gets constructed.
-    content_dict = process_files(doc, mode, strict)
+    content_dict, toc_dict = process_files(doc, strict)
 
     # create TOC
     toc = create_toc(doc)
@@ -1249,7 +1271,7 @@ def generate_binder(
     copy_assets_to_output(assets_path, final_assets_dir, force)
 
     # Write js helper file (do after copying assets in case it lives there)
-    write_javascript_helper(content_dict, js_helper_path)
+    write_javascript_helper(content_dict, toc_dict, js_helper_path)
 
     return binder
 
@@ -1313,13 +1335,6 @@ def main():
         help="Fail on first failure",
     )
     parser.add_argument(
-        "--mode",
-        type=str,
-        choices=["auto", "github", "wiki"],
-        default="auto",
-        help="Document mode: auto (detect), github (single h1 -- doc title), wiki (multiple h1s)",
-    )
-    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress all non-error output (useful for scripting)",
@@ -1348,13 +1363,6 @@ def main():
     output_dir = args.output.resolve()
     template_path = args.template.resolve()
     assets_path = args.assets.resolve()
-
-    # standardize document mode
-    if not args.mode in MODE_MAPPING:
-        raise ValueError(
-            f"Bug: --mode passed argparse validation, but not valid via MODE_MAPPING:\n\tValid: {', '.join(list(MODE_MAPPING.keys()))}\n\tGiven: {args.mode}"
-        )
-    document_mode = MODE_MAPPING[args.mode]
 
     # delete output dir if exists and --clean provided
     if args.clean:
@@ -1387,7 +1395,6 @@ def main():
         js_helper_path,
         args.force,
         args.strict,
-        document_mode,
         args.home,
     )
 

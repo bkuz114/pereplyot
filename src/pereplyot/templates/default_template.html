@@ -43,12 +43,16 @@
         <div class="site-title">
             <a href="#top">{{title}}</a>
         </div>
-        <!-- Theme selector widget -->
-        <div class="theme-widget">
-            <button id="themeBtn" class="theme-btn" aria-label="Select theme">
-            </button>
-            <div id="themeMenu" class="theme-menu hidden" role="listbox" aria-label="Available themes">
-                <!-- Options populated by themes.js -->
+        <!-- right-side controls -->
+        <div class="header-controls">
+            <!-- page TOC button (hidden by default until a document with TOC loads) -->
+            <button id="page-toc-toggle" class="page-toc-toggle hidden" aria-label="In-page navigation">§</button>
+            <!-- Theme selector widget -->
+            <div class="theme-widget">
+                <button aria-label="Select theme" class="theme-btn" id="themeBtn"></button>
+                <div id="themeMenu" class="theme-menu hidden" role="listbox" aria-label="Available themes">
+                    <!-- Options populated by themes.js -->
+                </div>
             </div>
         </div>
     </header>
@@ -60,6 +64,17 @@
             <button class="toc-close" id="toc-close" aria-label="Close table of contents">✕</button>
         </div>
         {{toc}}
+    </nav>
+
+    <!-- page TOC panel -->
+    <nav id="page-toc-panel" class="toc-panel toc-panel--right" aria-label="In-page table of contents">
+        <div class="toc-header">
+            <span class="toc-header-title">On this page</span>
+            <button aria-label="Close in-page navigation" class="toc-close" id="page-toc-close">✕</button>
+        </div>
+        <div id="page-toc-content" class="toc-list">
+            <!-- Populated dynamically by JavaScript -->
+        </div>
     </nav>
 
     <!-- Overlay for mobile when TOC is open -->

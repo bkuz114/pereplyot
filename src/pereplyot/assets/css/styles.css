@@ -369,6 +369,66 @@ body {
 }
 
 /* ============================================================================
+   Header controls (right side grouping)
+   ============================================================================ */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* ============================================================================
+   Page TOC toggle button
+   ============================================================================ */
+.page-toc-toggle {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text-primary);
+    transition: background 0.2s ease;
+    font-family: var(--font-sans);
+}
+
+.page-toc-toggle:hover {
+    background: var(--bg-surface-secondary);
+}
+
+/* ============================================================================
+   Page TOC panel (right-slide variant)
+   ============================================================================ */
+.toc-panel--right {
+    left: auto;
+    right: 0;
+    transform: translateX(100%);
+    border-right: none;
+    border-left: 1px solid var(--border);
+}
+
+.toc-panel--right.open {
+    transform: translateX(0);
+}
+
+/* Mobile: override right-slide to use same top-slide as main TOC */
+@media (max-width: 768px) {
+    .toc-panel--right {
+        left: 0;
+        right: 0;
+        transform: none;
+        top: -100vh;
+        border-left: none;
+    }
+
+    .toc-panel--right.open {
+        top: 60px;
+        transform: none;
+    }
+}
+
+/* ============================================================================
    Splash page styling
    ============================================================================ */
 

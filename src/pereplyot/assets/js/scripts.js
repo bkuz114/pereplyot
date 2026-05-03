@@ -13,8 +13,19 @@
     const tocOverlay = document.getElementById('toc-overlay');
     const topAnchor = document.getElementById('top');
 
-    // State
-    let isTocOpen = false;
+    // Page TOC elements
+    const pageTocToggle = document.getElementById('page-toc-toggle');
+    const pageTocPanel = document.getElementById('page-toc-panel');
+    const pageTocClose = document.getElementById('page-toc-close');
+    const pageTocContent = document.getElementById('page-toc-content');
+
+    // State (using objects for pass-by-reference to generalized functions)
+    let isTocOpen = {
+        value: false
+    };
+    let isPageTocOpen = {
+        value: false
+    };
     // key in SECTION_CONTENT dictionary (which is created by
     // python and saved to sections.js in the dist/ dir) that
     // is present on page load. Note: these keys are created
@@ -23,38 +34,135 @@
     // it is generated dynamically by python and saved to dist/!
     let currentSectionKey = 'start';
 
+    // =========================================================================
+    // Generalized Panel Controls
+    // =========================================================================
+
     /**
-     * Open the TOC panel
+     * Open a panel
      */
-    function openToc() {
-        if (!tocPanel) return;
-        tocPanel.classList.add('open');
-        if (tocOverlay) tocOverlay.classList.add('active');
-        if (tocToggle) tocToggle.setAttribute('aria-expanded', 'true');
-        isTocOpen = true;
+    function openPanel(panelEl, overlayEl, toggleBtnEl, state) {
+        if (!panelEl) return;
+        panelEl.classList.add('open');
+        if (overlayEl) overlayEl.classList.add('active');
+        if (toggleBtnEl) toggleBtnEl.setAttribute('aria-expanded', 'true');
+        state.value = true;
         document.body.style.overflow = 'hidden';
     }
 
     /**
-     * Close the TOC panel
+     * Close a panel
      */
-    function closeToc() {
-        if (!tocPanel) return;
-        tocPanel.classList.remove('open');
-        if (tocOverlay) tocOverlay.classList.remove('active');
-        if (tocToggle) tocToggle.setAttribute('aria-expanded', 'false');
-        isTocOpen = false;
+    function closePanel(panelEl, overlayEl, toggleBtnEl, state) {
+        if (!panelEl) return;
+        panelEl.classList.remove('open');
+        if (overlayEl) overlayEl.classList.remove('active');
+        if (toggleBtnEl) toggleBtnEl.setAttribute('aria-expanded', 'false');
+        state.value = false;
         document.body.style.overflow = '';
     }
 
     /**
-     * Toggle the TOC panel
+     * Open the main TOC panel
+     */
+    function openToc() {
+        if (isPageTocOpen.value) closePageToc();
+        openPanel(tocPanel, tocOverlay, tocToggle, isTocOpen);
+    }
+
+    /**
+     * Close the main TOC panel
+     */
+    function closeToc() {
+        closePanel(tocPanel, tocOverlay, tocToggle, isTocOpen);
+    }
+
+    /**
+     * Toggle the main TOC panel
      */
     function toggleToc() {
-        if (isTocOpen) {
+        if (isTocOpen.value) {
             closeToc();
         } else {
             openToc();
+        }
+    }
+
+    /**
+     * Open the page TOC panel
+     */
+    function openPageToc() {
+        if (isTocOpen.value) closeToc();
+        openPanel(pageTocPanel, tocOverlay, pageTocToggle, isPageTocOpen);
+    }
+
+    /**
+     * Close the page TOC panel
+     */
+    function closePageToc() {
+        closePanel(pageTocPanel, tocOverlay, pageTocToggle, isPageTocOpen);
+    }
+
+    /**
+     * Toggle the page TOC panel
+     */
+    function togglePageToc() {
+        if (isPageTocOpen.value) {
+            closePageToc();
+        } else {
+            openPageToc();
+        }
+    }
+
+    /**
+     * Update the page TOC for the currently loaded section
+     */
+    function updatePageToc(sectionKey) {
+        if (typeof SECTION_TOC === 'undefined' || !SECTION_TOC[sectionKey]) {
+            if (pageTocToggle) pageTocToggle.classList.add('hidden');
+            if (pageTocContent) pageTocContent.innerHTML = '';
+            return;
+        }
+
+        const tocHtml = SECTION_TOC[sectionKey];
+        if (!tocHtml || tocHtml.trim() === '') {
+            if (pageTocToggle) pageTocToggle.classList.add('hidden');
+            if (pageTocContent) pageTocContent.innerHTML = '';
+            return;
+        }
+
+        if (pageTocToggle) pageTocToggle.classList.remove('hidden');
+        if (pageTocContent) {
+            pageTocContent.innerHTML = tocHtml;
+
+            const pageLinks = pageTocContent.querySelectorAll('a');
+            pageLinks.forEach(link => {
+                link.addEventListener('click', handlePageTocLinkClick);
+            });
+        }
+    }
+
+    /**
+     * Handle clicks on page TOC links
+     */
+    function handlePageTocLinkClick(event) {
+        event.preventDefault();
+        const anchor = event.currentTarget;
+        const href = anchor.getAttribute('href');
+
+        if (href && href.startsWith('#')) {
+            const targetId = href.substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                const allLinks = pageTocContent.querySelectorAll('a');
+                allLinks.forEach(link => link.classList.remove('selected'));
+                anchor.classList.add('selected');
+                closePageToc();
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
         }
     }
 
@@ -83,6 +191,7 @@
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
             closeToc();
+            closePageToc();
             targetElement.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
@@ -141,11 +250,15 @@
             return;
         }
 
-        // close TOC panel
+        // close TOC panels
         closeToc();
+        closePageToc();
 
         // Update current section key before the transition
         currentSectionKey = sectionKey;
+
+        // Update page TOC for the new section
+        updatePageToc(sectionKey);
 
         // remove selected from the other anchors
         document.querySelectorAll('.toc-list a').forEach(a => {
@@ -184,15 +297,27 @@
             tocClose.addEventListener('click', closeToc);
         }
 
-        // Overlay click
-        if (tocOverlay) {
-            tocOverlay.addEventListener('click', closeToc);
+        // Page TOC events
+        if (pageTocToggle) {
+            pageTocToggle.addEventListener('click', togglePageToc);
+        }
+        if (pageTocClose) {
+            pageTocClose.addEventListener('click', closePageToc);
         }
 
-        // Escape key closes TOC
+        // Overlay click
+        if (tocOverlay) {
+            tocOverlay.addEventListener('click', () => {
+                if (isTocOpen.value) closeToc();
+                if (isPageTocOpen.value) closePageToc();
+            });
+        }
+
+        // Escape key closes either panel
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isTocOpen) {
-                closeToc();
+            if (e.key === 'Escape') {
+                if (isTocOpen.value) closeToc();
+                if (isPageTocOpen.value) closePageToc();
             }
         });
 
@@ -208,6 +333,9 @@
 
         // Wrap tables after content loads
         wrapTables();
+
+        // Initial page TOC update (splash page has no TOC)
+        updatePageToc(currentSectionKey);
     }
 
     // Run when DOM is ready
