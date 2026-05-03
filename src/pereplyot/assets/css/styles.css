@@ -50,6 +50,7 @@ body {
 /* ============================================================================
    Fixed Header
    ============================================================================ */
+
 .site-header {
     position: fixed;
     top: 0;
@@ -59,12 +60,35 @@ body {
     background: var(--header-bg);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--header-border);
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
-    justify-content: space-between;
     padding: 0 1.25rem;
     z-index: 1000;
     box-shadow: var(--shadow-sm);
+}
+
+.header-left {
+    justify-self: start;
+    display: flex;
+    align-items: center;
+}
+
+.site-title {
+    justify-self: center;
+    font-size: 1rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    /* keep as safety for very long titles */
+    text-overflow: ellipsis;
+}
+
+.header-right {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .toc-toggle {
@@ -117,11 +141,6 @@ body {
 /* ============================================================================
    Header controls (right side grouping)
    ============================================================================ */
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
 
 /* Page TOC toggle button */
 .page-toc-toggle {

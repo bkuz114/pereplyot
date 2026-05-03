@@ -36,15 +36,17 @@
 <body>
     <!-- Fixed header with TOC toggle and dark mode button -->
     <header class="site-header">
-        <button class="toc-toggle" id="toc-toggle" aria-label="Table of Contents" aria-expanded="false">
-            <span class="toc-icon">☰</span>
-            <span class="toc-label">TOC</span>
-        </button>
+        <div class="header-left">
+            <button class="toc-toggle" id="toc-toggle" aria-label="Table of Contents" aria-expanded="false">
+                <span class="toc-icon">☰</span>
+                <span class="toc-label">TOC</span>
+            </button>
+        </div>
         <div class="site-title">
             <a href="#top">{{title}}</a>
         </div>
         <!-- right-side controls -->
-        <div class="header-controls">
+        <div class="header-right">
             <!-- intra-page navigation controls -->
             <div class="nav-controls">
                 <button id="nav-prev" class="nav-button" disabled>◀</button>
