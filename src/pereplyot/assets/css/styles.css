@@ -114,6 +114,33 @@ body {
     text-decoration: underline;
 }
 
+/* ============================================================================
+   Header controls (right side grouping)
+   ============================================================================ */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Page TOC toggle button */
+.page-toc-toggle {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text-primary);
+    transition: background 0.2s ease;
+    font-family: var(--font-sans);
+}
+
+.page-toc-toggle:hover {
+    background: var(--bg-surface-secondary);
+}
+
 /* --------------------------------------------
    Theme widget (dropdown picker)
    -------------------------------------------- */
@@ -366,35 +393,6 @@ body {
         /* Defensive: ensure flex display even if overridden elsewhere */
         display: flex;
     }
-}
-
-/* ============================================================================
-   Header controls (right side grouping)
-   ============================================================================ */
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-/* ============================================================================
-   Page TOC toggle button
-   ============================================================================ */
-.page-toc-toggle {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    color: var(--text-primary);
-    transition: background 0.2s ease;
-    font-family: var(--font-sans);
-}
-
-.page-toc-toggle:hover {
-    background: var(--bg-surface-secondary);
 }
 
 /* ============================================================================
