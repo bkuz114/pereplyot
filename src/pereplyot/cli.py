@@ -1073,7 +1073,7 @@ def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
             if strict:
                 raise  # Fail fast in strict mode
 
-        return html, failed_count
+    return html, failed_count
 
 
 def process_chapters(
