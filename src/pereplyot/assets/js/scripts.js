@@ -419,13 +419,8 @@
             }
         });
 
-        // Smooth scroll to top when clicking header
-        document.querySelectorAll('.site-title a').forEach(anchor => {
-            anchor.addEventListener('click', smoothScroll);
-        });
-
         // Gradual open and smooth scroll for TOC links
-        document.querySelectorAll('.toc-list a').forEach(anchor => {
+        document.querySelectorAll('.toc-list a, .site-title a').forEach(anchor => {
             anchor.addEventListener('click', switchDocument);
         });
 
