@@ -338,6 +338,9 @@ def create_chapter_toc_entries(
             heading_id = re.sub(r"^-|-$", "", heading_id)
             heading["id"] = heading_id
 
+        # add .nav-target class (for js intra-page navigation)
+        beautiful_soup_utils.add_classes(heading, ["nav-target"])
+
         toc_entries.append(
             {
                 "level": level,
@@ -1059,7 +1062,9 @@ def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
 
             # add <hr> if multiple files
             if i > 0:
-                html += "<hr>"
+                # add nav-target class for js intra-page navigation
+                hr_id = random_digit_string(5)  # js needed for debugging
+                html += f"<hr class='nav-target' id='{hr_id}'>"
             html += file_html
 
         except Exception as e:

@@ -429,6 +429,47 @@ body {
 }
 
 /* ============================================================================
+   Intra-document Navigation Buttons
+   ============================================================================ */
+
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: var(--text-primary);
+    transition: background 0.2s ease;
+    font-family: var(--font-sans);
+    line-height: 1;
+}
+
+.nav-button:hover:not(:disabled) {
+    background: var(--bg-surface-secondary);
+}
+
+.nav-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Mobile: keep same styling, no special handling needed */
+@media (max-width: 768px) {
+    .nav-button {
+        padding: 0.5rem 0.6rem;
+        font-size: 1.1rem;
+    }
+}
+
+/* ============================================================================
    Splash page styling
    ============================================================================ */
 

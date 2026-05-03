@@ -19,6 +19,10 @@
     const pageTocClose = document.getElementById('page-toc-close');
     const pageTocContent = document.getElementById('page-toc-content');
 
+    // Navigation buttons
+    const navPrev = document.getElementById('nav-prev');
+    const navNext = document.getElementById('nav-next');
+
     // State (using objects for pass-by-reference to generalized functions)
     let isTocOpen = {
         value: false
@@ -33,6 +37,10 @@
     // SECTION_CONTENT is NOT in the source code -
     // it is generated dynamically by python and saved to dist/!
     let currentSectionKey = 'start';
+
+    // Intra-document navigation state
+    let navTargets = [];
+    let currentTargetIndex = -1;
 
     // =========================================================================
     // Generalized Panel Controls
@@ -167,6 +175,91 @@
     }
 
     /**
+     * ===============================================
+     * INTRA-PAGE NAVIGATION
+     * ==============================================
+     */
+
+    /**
+     * Build array of navigation targets from current DOM
+     * Targets are elements with class 'nav-target'
+     * @returns {Array<{id: string, element: HTMLElement, index: number}>}
+     */
+    function buildNavTargets() {
+        const container = document.getElementById('main-content');
+        if (!container) return [];
+
+        const targets = Array.from(container.querySelectorAll('.nav-target'));
+        return targets.map((el, index) => ({
+            id: el.id || `temp-${index}`,
+            element: el,
+            index: index
+        }));
+    }
+
+    /**
+     * Update prev/next button disabled states based on currentTargetIndex
+     */
+    function updateNavButtons() {
+        if (!navPrev || !navNext) return;
+
+        const hasPrev = currentTargetIndex > 0;
+        const hasNext = currentTargetIndex < navTargets.length - 1 && currentTargetIndex !== -1;
+
+        navPrev.disabled = !hasPrev;
+        navNext.disabled = !hasNext;
+
+        // Update ARIA attributes for accessibility
+        navPrev.setAttribute('aria-disabled', (!hasPrev).toString());
+        navNext.setAttribute('aria-disabled', (!hasNext).toString());
+    }
+
+    /**
+     * Scroll to a specific element
+     * @param {HTMLElement} element - The element to scroll to
+     */
+    function scrollToElement(element) {
+        if (!element) return;
+
+        // Close any open panels
+        if (isTocOpen.value) closeToc();
+        if (isPageTocOpen.value) closePageToc();
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+
+    /**
+     * Navigate to previous target (if exists)
+     */
+    function goToPrevTarget() {
+        if (currentTargetIndex <= 0) return;
+
+        currentTargetIndex--;
+        const target = navTargets[currentTargetIndex];
+        if (target && target.element) {
+            scrollToElement(target.element);
+        }
+        updateNavButtons();
+    }
+
+    /**
+     * Navigate to next target (if exists)
+     */
+    function goToNextTarget() {
+        if (currentTargetIndex === -1 || currentTargetIndex >= navTargets.length - 1) return;
+
+        currentTargetIndex++;
+        const target = navTargets[currentTargetIndex];
+        if (target && target.element) {
+            scrollToElement(target.element);
+        }
+        updateNavButtons();
+    }
+
+    /**
      * Wrap tables in responsive container
      */
     function wrapTables() {
@@ -273,6 +366,11 @@
         setTimeout(() => {
             container.innerHTML = newContent;
 
+            // Rebuild navigation targets for the new content
+            navTargets = buildNavTargets();
+            currentTargetIndex = navTargets.length > 0 ? 0 : -1;
+            updateNavButtons();
+
             // Scroll to top after content is swapped but before fade in
             topAnchor.scrollIntoView({
                 behavior: 'smooth',
@@ -331,11 +429,24 @@
             anchor.addEventListener('click', switchDocument);
         });
 
+        // Navigation buttons
+        if (navPrev) {
+            navPrev.addEventListener('click', goToPrevTarget);
+        }
+        if (navNext) {
+            navNext.addEventListener('click', goToNextTarget);
+        }
+
         // Wrap tables after content loads
         wrapTables();
 
         // Initial page TOC update (splash page has no TOC)
         updatePageToc(currentSectionKey);
+
+        // Initialize navigation targets for initial content
+        navTargets = buildNavTargets();
+        currentTargetIndex = navTargets.length > 0 ? 0 : -1;
+        updateNavButtons();
     }
 
     // Run when DOM is ready
