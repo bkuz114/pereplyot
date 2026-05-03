@@ -653,7 +653,7 @@ def convert_markdown_to_html(filepath: str) -> str:
     return raw_html
 
 
-def convert_raw_text_to_html(raw_text: str) -> str:
+def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
     """
     Convert raw text string to HTML with paragraph preservation and exact leading whitespace.
 
@@ -668,6 +668,9 @@ def convert_raw_text_to_html(raw_text: str) -> str:
 
     Args:
         raw_text: string to convert to HTML
+        indent: int to control indentation of new lines in raw text.
+            If > 0, all lines will be indented that many spaces.
+            NOTE: Overrides any leading spaces currently present.
 
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
@@ -703,14 +706,19 @@ def convert_raw_text_to_html(raw_text: str) -> str:
         for i, line in enumerate(lines):
             preserve_prefix = ""
             num_spaces = 0
-            # Convert leading spaces/tabs to &nbsp; entities
-            for ch in line:
-                if ch == " ":
-                    num_spaces += 1
-                elif ch == "\t":
-                    num_spaces += 4
-                else:
-                    break  # Stop at first non-whitespace character
+            if indent:
+                # add uniform num of spaces to all lines,
+                # regardless of how many currently present.
+                num_spaces = indent
+            else:
+                # Convert leading spaces/tabs to &nbsp; entities
+                for ch in line:
+                    if ch == " ":
+                        num_spaces += 1
+                    elif ch == "\t":
+                        num_spaces += 4
+                    else:
+                        break  # Stop at first non-whitespace character
             preserve_prefix += "&nbsp;" * num_spaces
             lines[i] = f"{preserve_prefix}{line}"
 
@@ -721,13 +729,16 @@ def convert_raw_text_to_html(raw_text: str) -> str:
     return "\n".join(html_parts)
 
 
-def convert_txt_to_html(filepath: Path) -> str:
+def convert_txt_to_html(filepath: Path, indent: int) -> str:
     """
     Convert .txt file to HTML.
     (see docstring of convert_raw_text_to_html for formatting specifics)
 
     Args:
         filepath: Path to .txt file
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
@@ -741,7 +752,7 @@ def convert_txt_to_html(filepath: Path) -> str:
         raise Exception(f"File is not .txt! {filepath}")
 
     raw_text = read_file(filepath)
-    return convert_raw_text_to_html(raw_text)
+    return convert_raw_text_to_html(raw_text, indent)
 
 
 def convert_docx_to_html(filepath: Path) -> str:
@@ -766,7 +777,7 @@ def convert_docx_to_html(filepath: Path) -> str:
     return result.value
 
 
-def convert_rtf_to_html(filepath: Path) -> str:
+def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     """
     Convert Microsoft .rtf file to HTML. Experimental -- use at own risk.
 
@@ -778,6 +789,9 @@ def convert_rtf_to_html(filepath: Path) -> str:
 
     Args:
         filepath: Path to .docx file
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns:
         HTML string
@@ -795,7 +809,7 @@ def convert_rtf_to_html(filepath: Path) -> str:
     buffer = StringIO()
     renderer.render(parsed, buffer)
     text_string = buffer.getvalue()
-    return convert_raw_text_to_html(text_string)
+    return convert_raw_text_to_html(text_string, indent)
 
 
 def post_process_file_html(html: str) -> str:
@@ -1029,7 +1043,7 @@ const SECTION_TOC = {toc_json};
 # ============================================================================
 
 
-def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
+def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, int]:
     """
     Generates HTML content for a single Chapter (which can be
     comprised of multiple FileRef objects)
@@ -1039,6 +1053,9 @@ def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
             (Note: Chapter objects are part of a Document object -- the object
             created via inputfile.py when pasing manifest JSON)
         strict: boolean if True, fail on any file processing failure
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns
         Tuple of [str, int]: HTML content + number of failed files
@@ -1054,11 +1071,11 @@ def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
             filepath = fileRef.path
             file_ext = filepath.suffix.lower()
             if file_ext == ".txt":
-                file_html = convert_txt_to_html(filepath)
+                file_html = convert_txt_to_html(filepath, indent)
             elif file_ext == ".docx":
                 file_html = convert_docx_to_html(filepath)
             elif file_ext == ".rtf":
-                file_html = convert_rtf_to_html(filepath)
+                file_html = convert_rtf_to_html(filepath, indent)
             elif file_ext == ".markdown" or file_ext == ".md":
                 file_html = convert_markdown_to_html(filepath)
             file_html = post_process_file_html(file_html)
@@ -1080,7 +1097,7 @@ def process_chapter(chapter: Chapter, strict: bool) -> Tuple[str, int]:
 
 
 def process_chapters(
-    chapters: List[Chapter], strict: bool
+    chapters: List[Chapter], strict: bool, indent: int
 ) -> Tuple[Dict[str, str], Dict[str, str], int, str]:
     """
     Iterates through a list of Chapter obejcts (coming from Document -- the object
@@ -1096,6 +1113,9 @@ def process_chapters(
         doc: Document object generated from input JSON file.
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns:
         Tuple with three objects:
@@ -1116,7 +1136,7 @@ def process_chapters(
     first_chapter_id = ""
 
     for i, chapter in enumerate(chapters):
-        chapter_html, failed_files = process_chapter(chapter, strict)
+        chapter_html, failed_files = process_chapter(chapter, strict, indent)
         failed_count += failed_files
         # post-process (Add title, etc)
         chapter_name = f"Chapter: {chapter.name}"
@@ -1136,7 +1156,9 @@ def process_chapters(
     return html, tocs, failed_count, first_chapter_id
 
 
-def process_files(doc: Document, strict: bool) -> Tuple[Dict[str, str], Dict[str, str]]:
+def process_files(
+    doc: Document, strict: bool, indent: int
+) -> Tuple[Dict[str, str], Dict[str, str]]:
     """
     Returns a dictionary mapping unique chapter ids to the HTML content
     created for that chapter (made up of its individual files, converted
@@ -1146,6 +1168,9 @@ def process_files(doc: Document, strict: bool) -> Tuple[Dict[str, str], Dict[str
         doc: Document object generated from input JSON file.
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns:
         a dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
@@ -1163,7 +1188,7 @@ def process_files(doc: Document, strict: bool) -> Tuple[Dict[str, str], Dict[str
     # Scenario 1: has parts
     for part in doc.parts:
         chapters_html, chapters_tocs, chapters_failed_count, first_chapter_id = (
-            process_chapters(part.chapters, strict)
+            process_chapters(part.chapters, strict, indent)
         )
         # assign unique id for the part
         part_id = random_digit_string(5)
@@ -1207,6 +1232,7 @@ def generate_binder(
     strict: bool,
     home_style: str,
     hide_navigation: bool,
+    indent: int,
 ) -> Path:
     """
     Creates HTML site from list of files in JSON inputfile.
@@ -1225,6 +1251,9 @@ def generate_binder(
         home_style: str indicating style for homepage ("basic", "descriptive")
         hide_navigation: boolean if True, intra-page navigation controls on the right
             of the fixed header will be hidden (chapter TOC button + < > buttons)
+        indent: int. Indents new lines in .txt, .rtf by this many spaces
+            in final rendered HTML (overrides existing leading spaces to
+            make document indentation uniform).
 
     Returns:
         Path to generated file
@@ -1254,7 +1283,7 @@ def generate_binder(
     #
     # Note: process_files modifies doc to add the id for created chapter div
     # to each Chapter obj, which is how TOC gets constructed.
-    content_dict, toc_dict = process_files(doc, strict)
+    content_dict, toc_dict = process_files(doc, strict, indent)
 
     # create TOC
     toc = create_toc(doc)
@@ -1368,6 +1397,12 @@ def main():
         action="store_true",
         help="Hide intra-page navigation controls from the header",
     )
+    parser.add_argument(
+        "--indent",
+        type=int,
+        default=0,
+        help="Indent all new lines in .txt, .rtf files by this many spaces (Note: overrides existing leading whitespace to make indentation uniform throughout binder.)",
+    )
     parser.add_argument("--version", "-v", action="version", version=f"{__version__}")
     args = parser.parse_args()
 
@@ -1414,6 +1449,7 @@ def main():
         args.strict,
         args.home,
         args.no_navigation,
+        args.indent,
     )
 
     # optionally open in browser
