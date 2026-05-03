@@ -661,15 +661,10 @@ def convert_raw_text_to_html(raw_text: str) -> str:
         - Splits text into paragraphs on double newlines (blank lines).
         - Each paragraph is wrapped in <p> tags.
         - Single newlines within a paragraph become <br> tags.
-        - Leading spaces/tabs on the FIRST line of a paragraph are preserved visually
+        - Leading spaces/tabs on lines are preserved visually
           by converting each space to &nbsp; and each tab to 4 &nbsp;.
         - If the first line has no leading whitespace, no &nbsp; prefix is added.
         - cyrillic style << >>, « » converted to <em> </em> tags
-
-    Note:
-        Only the first line of each paragraph is checked and prefixed. Leading
-        whitespace on subsequent lines is not preserved (as they are typically
-        wrapped lines, not intentional indentation).
 
     Args:
         raw_text: string to convert to HTML
@@ -704,23 +699,24 @@ def convert_raw_text_to_html(raw_text: str) -> str:
         if not lines:
             continue
 
-        # Check first line only for leading whitespace
-        first_line = lines[0]
-        preserve_prefix = ""
-
-        if first_line and first_line[0] in (" ", "\t"):
-            # Convert leading spaces/tabs to &nbsp; entities
-            for ch in first_line:
-                if ch == " ":
-                    preserve_prefix += "&nbsp;"
-                elif ch == "\t":
-                    preserve_prefix += "&nbsp;" * 4
-                else:
-                    break  # Stop at first non-whitespace character
+        # preserve leading whitespace in lines
+        for i, line in enumerate(lines):
+            preserve_prefix = ""
+            # check if first char in line is whitespace
+            if line and line[0] in (" ", "\t"):
+                # Convert leading spaces/tabs to &nbsp; entities
+                for ch in line:
+                    if ch == " ":
+                        preserve_prefix += "&nbsp;"
+                    elif ch == "\t":
+                        preserve_prefix += "&nbsp;" * 4
+                    else:
+                        break  # Stop at first non-whitespace character
+            lines[i] = f"{preserve_prefix}{line}"
 
         # Rebuild paragraph with <br> for newlines
         para_with_br = "<br>\n".join(lines)
-        html_parts.append(f"<p>{preserve_prefix}{para_with_br}</p>")
+        html_parts.append(f"<p>{para_with_br}</p>")
 
     return "\n".join(html_parts)
 
