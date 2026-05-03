@@ -342,19 +342,24 @@ body {
 }
 
 /* TOC indentation levels */
-.toc-level-h2 {
-    padding-left: 1rem !important;
+.toc-level-h1 {
+    padding-left: 0.5rem !important;
     font-weight: 500;
 }
 
+.toc-level-h2 {
+    padding-left: 1.5rem !important;
+    font-weight: 0.85rem;
+}
+
 .toc-level-h3 {
-    padding-left: 2rem !important;
-    font-size: 0.85rem;
+    padding-left: 2.5rem !important;
+    font-size: 0.80rem;
 }
 
 .toc-level-h4 {
     padding-left: 3rem !important;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
 }
 
 /* TOC overlay (mobile) */
