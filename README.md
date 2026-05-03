@@ -171,6 +171,25 @@ pereplyot manifest.json --assets path/to/my/assets
 
 Your assets directory should contain `css/` and `js/` subdirectories.
 
+## HTML in source documents
+
+HTML tags are passed through to the output without escaping. This allows you to use rich formatting (bold, italic, lists, tables, etc.) directly in your source files across `.txt`, `.rtf`, and `.md` formats.
+
+**Example:**
+
+Source:
+
+```html
+This file has <b>HTML tags</b>.
+```
+
+Rendered output:
+
+> This file has **HTML tags**.
+
+> **Note:** Because HTML is not escaped, be mindful of tag balancing and
+> avoid raw user-generated content unless properly sanitized.
+
 ## Development
 
 ### Prerequisites
