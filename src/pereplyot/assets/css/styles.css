@@ -33,10 +33,6 @@ body {
     scroll-behavior: smooth;
 }
 
-.hidden {
-    display: none;
-}
-
 .chapter-title {
     text-align: center;
 }
@@ -797,5 +793,15 @@ hr {
 }
 
 .print-footer {
+    display: none;
+}
+
+/**
+ * Always declare .hidden at end of file
+ * to avoid other styles (that you want
+ * applied to hidden elements) overriding
+ * it with display: porperties.
+ */
+.hidden {
     display: none;
 }
