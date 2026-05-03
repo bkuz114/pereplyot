@@ -91,6 +91,18 @@ body {
     gap: 0.75rem;
 }
 
+/**
+ * div that holds just the intra-page controls
+ * (intra-page TOC button, <| |> buttons)
+ */
+#intra-navigation {
+    display: flex;
+    /* in case heights become different */
+    align-items: center;
+    /* space between nav buttons and § button */
+    gap: 0.75rem;
+}
+
 .toc-toggle {
     display: flex;
     align-items: center;

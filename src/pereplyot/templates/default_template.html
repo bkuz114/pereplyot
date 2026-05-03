@@ -47,13 +47,15 @@
         </div>
         <!-- right-side controls -->
         <div class="header-right">
-            <!-- intra-page navigation controls -->
-            <div class="nav-controls">
-                <button id="nav-prev" class="nav-button" disabled>◀</button>
-                <button id="nav-next" class="nav-button" disabled>▶</button>
+            <div id="intra-navigation" {{navigation_div_inline_style}}>
+                <!-- intra-page navigation controls -->
+                <div class="nav-controls">
+                    <button id="nav-prev" class="nav-button" disabled>◀</button>
+                    <button id="nav-next" class="nav-button" disabled>▶</button>
+                </div>
+                <!-- page TOC button (hidden by default until a document with TOC loads) -->
+                <button id="page-toc-toggle" class="page-toc-toggle hidden" aria-label="In-page navigation">§</button>
             </div>
-            <!-- page TOC button (hidden by default until a document with TOC loads) -->
-            <button id="page-toc-toggle" class="page-toc-toggle hidden" aria-label="In-page navigation">§</button>
             <!-- Theme selector widget -->
             <div class="theme-widget">
                 <button aria-label="Select theme" class="theme-btn" id="themeBtn"></button>
