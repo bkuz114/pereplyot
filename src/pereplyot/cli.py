@@ -286,13 +286,9 @@ def render_toc(toc_entries: List[Dict], main_toc: bool = False) -> str:
 
     html = '<ul class="toc-list">\n'
 
-    # Create anchor to top of document
-    anchor = "#top"
-    link_text = "Top"
-    if main_toc:
-        anchor = "#start"
-        link_text = "Start"
-    html += f'  <li><a href="{anchor}" class="toc-level-h1 top-link">↑ {link_text}</a></li>\n'
+    # Intra-page TOC: Create anchor to top of document
+    if not main_toc:
+        html += f'  <li><a href="#top" class="toc-level-h1 top-link">↑ Top</a></li>\n'
 
     # create <li> for each heading
     for entry in entries:
