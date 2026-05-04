@@ -221,5 +221,5 @@ MIT License – see [LICENSE](LICENSE) file for details.
 - Document conversion via [python-docx](https://python-docx.readthedocs.io/)
 - Template rendering inherited from [renderkind](https://github.com/bkuz114/renderkind)
 - JSON parsing via vendored [inputfile-parser](https://github.com/bkuz114/inputfile-parser)
-- rtf parsing via rtfparse [rtfparse](https://pypi.org/project/rtfparse/)
+- rtf parsing via striprtf [striprtf](https://pypi.org/project/striprtf/)
 - docx parsing via mammoth [mammoth](https://pypi.org/project/mammoth/)
