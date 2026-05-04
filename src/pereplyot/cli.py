@@ -433,8 +433,7 @@ def template_html(
             frontmatter = {"key1": "value1", "key2": "value2"},
             "value1" will be embedded at {{key1}} placeholder, "value2" at {{key2}}, etc.
         toc: string of content to embed at {{toc}} placeholder
-        hide_navigation: boolean if True, intra-page navigation controls on the right
-            of the fixed header will be hidden (chapter TOC button + < > buttons)
+        hide_navigation: boolean if True, hides section TOC button
 
     Returns:
         Content of template file with embedded markdown content and title.
@@ -455,14 +454,14 @@ def template_html(
     template_content = template_path.read_text(encoding="utf-8")
 
     # Build substitutions
-    navigation_div_inline_style = ""
+    chapter_toc_button_inline_style = ""
     if hide_navigation:
-        navigation_div_inline_style = 'style="display: none;"'
+        chapter_toc_button_inline_style = 'style="display: none;"'
     substitutions = {
         "content": content,
         "toc": toc_html,
         "asset_path_prefix": asset_path_prefix,
-        "navigation_div_inline_style": navigation_div_inline_style,
+        "chapter_toc_button_inline_style": chapter_toc_button_inline_style,
     }
 
     # merge frontmatter data
@@ -1281,8 +1280,7 @@ def generate_binder(
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
         home_style: str indicating style for homepage ("basic", "descriptive")
-        hide_navigation: boolean if True, intra-page navigation controls on the right
-            of the fixed header will be hidden (chapter TOC button + < > buttons)
+        hide_navigation: boolean if True, hides section TOC button
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
@@ -1429,7 +1427,7 @@ def main():
     parser.add_argument(
         "--no-navigation",
         action="store_true",
-        help="Hide intra-page navigation controls from the header",
+        help="Hide section TOC button from the header",
     )
     parser.add_argument(
         "--indent",
