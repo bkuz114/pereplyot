@@ -34,10 +34,9 @@ import yaml
 import markdown
 import webbrowser
 from bs4 import BeautifulSoup
-from rtfparse.parser import Rtf_Parser
-from rtfparse.renderers.html_decapsulator import HTML_Decapsulator
 from io import StringIO
 import logging
+from striprtf.striprtf import rtf_to_text
 
 # Allow direct execution from source during development (e.g., `python cli.py`)
 # by adding the `src/` directory to Python's import path. This block only runs
@@ -795,14 +794,13 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     if not filepath.suffix == ".rtf":
         raise Exception(f"File is not .rtf! {filepath}")
 
-    parser = Rtf_Parser(rtf_path=filepath)
-    parsed = parser.parse_file()
-    # Render to HTML (returns internal format)
-    renderer = HTML_Decapsulator()
-    # convert to HTML string
-    buffer = StringIO()
-    renderer.render(parsed, buffer)
-    text_string = buffer.getvalue()
+    with open(filepath, 'rb') as f:
+        rtf_bytes = f.read()
+
+    # Decode as ascii, ignoring errors (RTF is 7-bit)
+    rtf_bytes = rtf_bytes.decode('ascii', errors='ignore')
+    text_string = rtf_to_text(rtf_bytes)
+
     return convert_raw_text_to_html(text_string, indent)
 
 
