@@ -130,14 +130,19 @@
      * Update the page TOC for the currently loaded section
      */
     function updatePageToc(sectionKey) {
-        if (typeof SECTION_TOC === 'undefined' || !SECTION_TOC[sectionKey]) {
-            if (pageTocToggle) pageTocToggle.classList.add('hidden');
-            if (pageTocContent) pageTocContent.innerHTML = '';
+        if (!SECTION_CONTENT) {
+            console.warn(`Missing DOM element SECTION_CONTENT (should be written by cli.py to section.js)`);
             return;
         }
 
-        const tocHtml = SECTION_TOC[sectionKey];
+        if (!SECTION_CONTENT[sectionKey]) {
+            console.warn(`No content found for section key: ${sectionKey}`);
+            return;
+        }
+
+        const tocHtml = SECTION_CONTENT[sectionKey]?.toc;
         if (!tocHtml || tocHtml.trim() === '') {
+            console.warn(`section key (${sectionKey}) present but no TOC data (this is normal if no intra-page navigation, e.g. home page)`);
             if (pageTocToggle) pageTocToggle.classList.add('hidden');
             if (pageTocContent) pageTocContent.innerHTML = '';
             return;
