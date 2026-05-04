@@ -355,9 +355,8 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
     -- Connection to javascript / How the TOC works --
 
     1. Each TOC entry corresponds to a Part or Chapter
-    2. href attr assigned to Part or Chapters id_attr,
-       a unique integer string assigned during 'process_files'
-    3. That id_attr is also stored as a key in a dictionary
+    2. href attr assigned to Part or Chapter's id attr
+    3. That id attr is also stored as a key in a dictionary
        that gets written to a javascript file; it's value
        is the HTML content that should be loaded when user
        clicks on that TOC link.
@@ -377,33 +376,29 @@ def create_toc_entries(doc: Document, max_depth: int = 4) -> List[Dict]:
 
     # Flat structure: (no parts)
     for chapter in doc.chapters:
-        # get id attr assigned during process_files
-        id_attr = chapter.id_attr
         toc_entries.append(
             {
                 "level": 1,
                 "text": chapter.name,
-                "id": id_attr,
+                "id": chapter.id,
             }
         )
 
     # Heirarchical structure: (has parts)
     for part in doc.parts:
-        part_id = part.id_attr
         toc_entries.append(
             {
                 "level": 1,
                 "text": part.name,
-                "id": part_id,
+                "id": part.id,
             }
         )
         for chapter in part.chapters:
-            chapter_id = chapter.id_attr
             toc_entries.append(
                 {
                     "level": 2,
                     "text": chapter.name,
-                    "id": chapter_id,
+                    "id": chapter.id,
                 }
             )
     return toc_entries
@@ -812,7 +807,7 @@ def post_process_file_html(html: str) -> str:
     return f'<div class="file-section">{html}</div>'
 
 
-def post_process_chapter_html(html: str, title: str) -> tuple[str, str]:
+def post_process_chapter_html(html: str, title: str) -> str:
     """Wrap chapter HTML in a div and generate a unique identifier for it
 
     Args:
@@ -820,20 +815,9 @@ def post_process_chapter_html(html: str, title: str) -> tuple[str, str]:
         title: string chapter of title
 
     Returns:
-        tuple of (CONTENT, ID), where CONTENT: wrapper HTML string, and
-        id is a string, a unique id for this content.
-        *NOTE*: this id is NOT for an id attr, will be used by js + TOC to
-        load content. SPecifically: ID / CONTENT will be added as key/value
-        pair to dict that gets written to js file sections.js, and added as
-        href attr for TOC link for this content; when user clicks on that
-        link, scripts.js will dynamically retrieve this content from
-        sections.js object and load
+        string of updated HTML
     """
-    id_attr = random_digit_string(5)
-    return (
-        f'<div class="chapter-section"><h2 class="chapter-title">{title}</h2>{html}</div>',
-        id_attr,
-    )
+    return f'<div class="chapter-section"><h2 class="chapter-title">{title}</h2>{html}</div>'
 
 
 # ============================================================================
@@ -1094,7 +1078,7 @@ def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, i
 
 def process_chapters(
     chapters: List[Chapter], strict: bool, indent: int
-) -> Tuple[Dict[str, str], Dict[str, str], int, str]:
+) -> Tuple[Dict[str, str], Dict[str, str], int]:
     """
     Iterates through a list of Chapter obejcts (coming from Document -- the object
     created from input JSON manifest file), raw content,
@@ -1114,22 +1098,17 @@ def process_chapters(
             make document indentation uniform).
 
     Returns:
-        Tuple with three objects:
+        Tuple with two objects:
         1. dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
            - unique_ID: an id generated for the constructed chapter
            - HTML_content: HTML string of all data for a chapter (chapters
            can have multiple files)
         2. count of files that failed to procss
-        3. str it of first chapter (so part can open to its content)
     """
 
     html = {}
     tocs = {}
     failed_count = 0
-
-    # send back first chapter id so parts can reference it
-    # (as a part will open to its first chapter)
-    first_chapter_id = ""
 
     for i, chapter in enumerate(chapters):
         chapter_html, failed_files = process_chapter(chapter, strict, indent)
@@ -1137,19 +1116,14 @@ def process_chapters(
         # post-process (Add title, etc)
         chapter_name = f"Chapter: {chapter.name}"
         # wrap in div and get the id attr assigned to it
-        chapter_html, id_attr = post_process_chapter_html(chapter_html, chapter_name)
-        # modify the Chapter object to have the id attr
-        chapter.id_attr = id_attr
+        chapter_html = post_process_chapter_html(chapter_html, chapter_name)
         # create a TOC for the chapter with ids added in
         chapter_html, chapter_toc_entries = create_chapter_toc_entries(chapter_html)
         chapter_toc = render_toc(chapter_toc_entries)
         # add to main content html
-        html[id_attr] = chapter_html
-        tocs[id_attr] = chapter_toc
-        # save first chapter
-        if i == 0:
-            first_chapter_id = id_attr
-    return html, tocs, failed_count, first_chapter_id
+        html[chapter.id] = chapter_html
+        tocs[chapter.id] = chapter_toc
+    return html, tocs, failed_count
 
 
 def process_files(
@@ -1183,20 +1157,13 @@ def process_files(
 
     # Scenario 1: has parts
     for part in doc.parts:
-        chapters_html, chapters_tocs, chapters_failed_count, first_chapter_id = (
-            process_chapters(part.chapters, strict, indent)
+        chapters_html, chapters_tocs, chapters_failed_count = process_chapters(
+            part.chapters, strict, indent
         )
-        # assign unique id for the part
-        part_id = random_digit_string(5)
         # add part id as key to html_dict: its value
         # will be the HTML content it opens to --
         # should be the first chapter in this part
-        html_dict[part_id] = chapters_html[first_chapter_id]
-        # add id to Part obj for when making TOC
-        # (will get set as its href attr; js will
-        # use that to open the content at that val
-        # in the dictionary)
-        part.id_attr = part_id
+        html_dict[part.id] = chapters_html[part.chapters[0].id]
         total_failed += chapters_failed_count
         # add next set of chapter id / contents to html dictionary for js
         html_dict = html_dict | chapters_html
@@ -1204,7 +1171,7 @@ def process_files(
     # Scenario 2: flat structure (only chapters, no parts)
     if doc.chapters:
         # only html_dict and total_failed are needed
-        html_dict, chapters_tocs, total_failed, first_chapter = process_chapters(
+        html_dict, chapters_tocs, total_failed = process_chapters(
             doc.chapters, strict, indent
         )
 
