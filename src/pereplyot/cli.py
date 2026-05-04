@@ -1077,8 +1077,12 @@ def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, i
 
 
 def process_chapters(
-    chapters: List[Chapter], strict: bool, indent: int
-) -> Tuple[Dict[str, str], Dict[str, str], int]:
+    chapters: List[Chapter],
+    strict: bool,
+    indent: int,
+    prev_chapter_id: str | None,
+    next_chapter_id: str | None,
+) -> Tuple[Dict[str, Dict[str, str]], Dict[str, str], int]:
     """
     Iterates through a list of Chapter obejcts (coming from Document -- the object
     created from input JSON manifest file), raw content,
@@ -1096,14 +1100,23 @@ def process_chapters(
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        prev_chapter_id: ID of the chapter immediately preceding the first
+            chapter in this list. Used to weave chapter sequences across
+            Parts in hierarchical documents. Pass None if this is the first
+            list of chapters (no preceding chapter), or for flat documents.
+        next_chapter_id: ID of the chapter immediately following the lasti
+            chapter in this list. Used to weave chapter sequences across
+            Parts in hierarchical documents. Pass None if this is the last
+            list of chapters (no following chapter), or for flat documents.
 
     Returns:
-        Tuple with two objects:
-        1. dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
-           - unique_ID: an id generated for the constructed chapter
-           - HTML_content: HTML string of all data for a chapter (chapters
-           can have multiple files)
-        2. count of files that failed to procss
+        Tuple containing:
+            1. Dict[str, Dict[str, str]]: Maps chapter.id to chapter data, where
+               chapter data contains:
+               - "content": HTML string for the chapter
+               - "prev": (optional) ID of previous chapter (for navigation)
+               - "next": (optional) ID of next chapter (for navigation)
+            2. count of files that failed to procss
     """
 
     html = {}
@@ -1120,8 +1133,41 @@ def process_chapters(
         # create a TOC for the chapter with ids added in
         chapter_html, chapter_toc_entries = create_chapter_toc_entries(chapter_html)
         chapter_toc = render_toc(chapter_toc_entries)
+
+        # id of previous chapter (either passed in
+        # from previous part, or prev chapter in this chapter list)
+        prev_id = None
+        if i == 0:
+            # this is the first chapter in this chapter list
+            # so the previous chapter is the last chapter
+            # in the last part (if any)
+            prev_id = prev_chapter_id
+        else:
+            prev_id = chapters[i - 1].id
+
+        # id of next chapter (either passed in from
+        # next part, or next chapter in this chapter list)
+        next_id = None
+        if i == len(chapters) - 1:
+            # this is last chapter in this chapter list
+            # so the next chapter is the first chapter
+            # in the next part (if any)
+            next_id = next_chapter_id
+        else:
+            next_id = chapters[i + 1].id
+
+        # construct dictionary to map chapter id to
+        #
+        # CAUTION! DO NOT CHANGE THESE ATTR NAMES!
+        # scripts.js depends on them.
+        chapter_data = {"content": chapter_html}
+        if prev_id:
+            chapter_data["prev"] = prev_id
+        if next_id:
+            chapter_data["next"] = next_id
+
         # add to main content html
-        html[chapter.id] = chapter_html
+        html[chapter.id] = chapter_data
         tocs[chapter.id] = chapter_toc
     return html, tocs, failed_count
 
@@ -1156,9 +1202,23 @@ def process_files(
     total_failed = 0
 
     # Scenario 1: has parts
-    for part in doc.parts:
+    for i, part in enumerate(doc.parts):
+        # get id of last chapter in previous part
+        prev_part_last_chap_id = None
+        if i > 0:
+            prev_part_chapters = doc.parts[i - 1].chapters
+            prev_part_last_chap_id = prev_part_chapters[len(prev_part_chapters) - 1].id
+        # get id of first chapter in next part
+        next_part_first_chap_id = None
+        if i < len(doc.parts) - 1:
+            next_part_chapters = doc.parts[i + 1].chapters
+            next_part_first_chap_id = next_part_chapters[0].id
         chapters_html, chapters_tocs, chapters_failed_count = process_chapters(
-            part.chapters, strict, indent
+            part.chapters,
+            strict,
+            indent,
+            prev_part_last_chap_id,
+            next_part_first_chap_id,
         )
         # add part id as key to html_dict: its value
         # will be the HTML content it opens to --
@@ -1172,7 +1232,7 @@ def process_files(
     if doc.chapters:
         # only html_dict and total_failed are needed
         html_dict, chapters_tocs, total_failed = process_chapters(
-            doc.chapters, strict, indent
+            doc.chapters, strict, indent, None, None
         )
 
     logger.info(
@@ -1255,8 +1315,10 @@ def generate_binder(
     splash_html = create_home(doc, home_style)
 
     # add splash page HTML to content dict
-    # (don't change "start"! scripts.js depends on it)
-    content_dict["start"] = splash_html
+    # - don't change "start"! scripts.js depends on it
+    # - don't change "content" -- must be consistent with
+    #   rest of content_dict
+    content_dict["start"] = {"content": splash_html}
 
     # Render template
     final_html = template_html(

@@ -22,6 +22,8 @@
     // Navigation buttons
     const navPrev = document.getElementById('nav-prev');
     const navNext = document.getElementById('nav-next');
+    const navChapPrev = document.getElementById('nav-chap-prev');
+    const navChapNext = document.getElementById('nav-chap-next');
 
     // State (using objects for pass-by-reference to generalized functions)
     let isTocOpen = {
@@ -37,6 +39,8 @@
     // SECTION_CONTENT is NOT in the source code -
     // it is generated dynamically by python and saved to dist/!
     let currentSectionKey = 'start';
+    let prevSectionKey = null;
+    let nextSectionKey = null;
 
     // Intra-document navigation state
     let navTargets = [];
@@ -215,6 +219,23 @@
     }
 
     /**
+     * Update inter-chapter prev/next button disabled states based on currentTargetIndex
+     */
+    function updateChapterNavButtons() {
+        if (!navChapPrev || !navChapNext) return;
+
+        const hasPrev = prevSectionKey != null;
+        const hasNext = nextSectionKey != null;
+
+        navChapPrev.disabled = !hasPrev;
+        navChapNext.disabled = !hasNext;
+
+        // Update ARIA attributes for accessibility
+        navChapPrev.setAttribute('aria-disabled', (!hasPrev).toString());
+        navChapNext.setAttribute('aria-disabled', (!hasNext).toString());
+    }
+
+    /**
      * Scroll to a specific element
      * @param {HTMLElement} element - The element to scroll to
      */
@@ -312,11 +333,22 @@
         }
 
         // Look up the HTML content for this section
-        const newContent = SECTION_CONTENT[sectionKey];
+        const newContentData = SECTION_CONTENT[sectionKey];
 
         // Exit silently if section key doesn't exist (defensive programming)
-        if (!newContent) {
+        if (!newContentData) {
             console.warn(`No content found for section key: ${sectionKey}`);
+            return;
+        }
+
+        // get next and prev chapters + HTML content
+        const newContent = newContentData?.content;
+        const prevKey = newContentData?.prev;
+        const nextKey = newContentData?.next;
+        console.log(`prev, next: ${prevKey}, ${nextKey}`);
+
+        if (!newContent) {
+            console.warn(`Section key found, but no "content" key in its value: ${sectionKey} (did cli.py update how its constructing the dictionaries?)`);
             return;
         }
 
@@ -331,8 +363,10 @@
         closeToc();
         closePageToc();
 
-        // Update current section key before the transition
+        // Update keys for navigation
         currentSectionKey = sectionKey;
+        nextSectionKey = nextKey;
+        prevSectionKey = prevKey;
 
         // Update page TOC for the new section
         updatePageToc(sectionKey);
@@ -346,6 +380,7 @@
             navTargets = buildNavTargets();
             currentTargetIndex = navTargets.length > 0 ? 0 : -1;
             updateNavButtons();
+            updateChapterNavButtons();
 
             // Scroll to top after content is swapped but before fade in
             topAnchor.scrollIntoView({
@@ -493,6 +528,13 @@
         if (navNext) {
             navNext.addEventListener('click', goToNextTarget);
         }
+        // Inter-chapter Navigation buttons
+        if (navChapPrev) {
+            navChapPrev.addEventListener('click', () => switchDocument(prevSectionKey));
+        }
+        if (navChapNext) {
+            navChapNext.addEventListener('click', () => switchDocument(nextSectionKey));
+        }
 
         // Wrap tables after content loads
         wrapTables();
@@ -504,6 +546,7 @@
         navTargets = buildNavTargets();
         currentTargetIndex = navTargets.length > 0 ? 0 : -1;
         updateNavButtons();
+        updateChapterNavButtons();
     }
 
     // Run when DOM is ready
