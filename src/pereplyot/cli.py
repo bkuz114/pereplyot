@@ -1205,7 +1205,7 @@ def process_files(
     if doc.chapters:
         # only html_dict and total_failed are needed
         html_dict, chapters_tocs, total_failed, first_chapter = process_chapters(
-            doc.chapters, strict
+            doc.chapters, strict, indent
         )
 
     logger.info(
