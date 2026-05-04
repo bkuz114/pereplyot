@@ -293,34 +293,18 @@
     }
 
     /**
-     * Switch the active section content with a fade transition.
+     * Switch the active section content with a fade transition based on a key.
      *
-     * This function is called when a TOC link is clicked. It reads the section
-     * key from the anchor's href attribute (e.g., "#1234"), looks up the
-     * corresponding HTML content from the SECTION_CONTENT global object, and
-     * replaces the container's content. The transition uses opacity fading
-     * to avoid abrupt visual changes.
+     * This function accepts a "section key" (typically the href attr of a link).
+     * It looks up the corresponding HTML content from the SECTION_CONTENT global
+     * object (created via cli.py) and replaces the container's content. The
+     * transition uses opacity fading to avoid abrupt visual changes.
      *
-     * The container element must have an id of "main-content". The function
-     * prevents default anchor behavior to avoid browser fragment navigation.
-     *
-     * Usage:
-     *   document.querySelectorAll('.toc-list a.chap-link').forEach(anchor => {
-     *       anchor.addEventListener('click', switchDocument);
-     *   });
+     * The function prevents default anchor behavior to avoid browser fragment navigation.
      *
      * @param {Event} event - The click event from the anchor element.
      */
-    function switchDocument(event) {
-        // Prevent default anchor behavior (browser jumping to #fragment)
-        event.preventDefault();
-
-        // Get the clicked anchor element
-        const anchor = event.currentTarget;
-
-        // Extract section key from href attribute (remove the leading '#')
-        const href = anchor.getAttribute('href');
-        const sectionKey = href.substring(1); // Remove the '#'
+    function switchDocument(sectionKey) {
 
         // Do nothing if already displaying this section
         if (sectionKey === currentSectionKey) {
@@ -353,14 +337,6 @@
         // Update page TOC for the new section
         updatePageToc(sectionKey);
 
-        // remove selected from the other anchors
-        document.querySelectorAll('.toc-list a').forEach(a => {
-            a.classList.remove('selected');
-        });
-
-        // set selected on newly clicked anchor so it will stay in a hover state
-        anchor.classList.add("selected");
-
         // Fade out, swap content, then fade in
         container.style.opacity = '0';
         setTimeout(() => {
@@ -379,6 +355,87 @@
 
             container.style.opacity = '1';
         }, 150); // 150ms matches CSS transition on #main-content; if you change here change there
+
+        // Update TOC styling
+        updateTocStyling(sectionKey);
+    }
+
+    /**
+     * Find the TOC anchor element that corresponds to a given section key.
+     *
+     * @param {string} sectionKey - The section identifier (e.g., "65945")
+     * @returns {HTMLElement|null} The matching anchor element, or null if not found
+     */
+    function getChapterAnchor(sectionKey) {
+        return document.querySelector(`.toc-list .chap-link a[href="#${sectionKey}"]`);
+    }
+
+    /**
+     * Update TOC link styling to highlight the currently active section.
+     *
+     * Removes 'selected' class from all TOC anchors, then adds 'selected'
+     * to the anchor matching the given section key (if it exists).
+     *
+     * @param {string} sectionKey - The section identifier (e.g., "65945")
+     */
+    function updateTocStyling(sectionKey) {
+        // remove selected from the other anchors
+        document.querySelectorAll('.toc-list a').forEach(a => {
+            a.classList.remove('selected');
+        });
+
+        // Find chapter link (if any) and mark as selected so it will stay in a hover state
+        const matchingAnchor = getChapterAnchor(sectionKey);
+        if (matchingAnchor) {
+            matchingAnchor.classList.add('selected');
+        }
+    }
+
+    /**
+     * Extracts the section key from a TOC anchor element's href attribute.
+     *
+     * @param {HTMLElement} anchor - The anchor element (e.g., <a href="#65945">)
+     * @returns {string|null} The section key with the leading '#' removed, or null if invalid
+     */
+    function getSectionKey(anchor) {
+        if (!anchor) return null;
+        // Extract section key from href attribute (remove the leading '#')
+        const href = anchor.getAttribute('href');
+        if (!href || !href.startsWith('#')) return null; // Remove the '#'
+        return href.substring(1);
+    }
+
+    /**
+     * Handles click events on TOC links.
+     *
+     * @param {Event} event - The click event from the anchor element
+     */
+    function handleTocClick(event) {
+
+        // Prevent default anchor behavior (browser jumping to #fragment)
+        event.preventDefault();
+
+        // Get the clicked anchor element
+        const anchor = event.currentTarget;
+
+        // Get section key
+        const sectionKey = getSectionKey(anchor);
+
+        // Update document
+        if (sectionKey) {
+            switchDocument(sectionKey);
+        }
+    }
+
+    /**
+     * Handles click events on home page links.
+     *
+     * @param {Event} event - The click event from the anchor element
+     */
+    function handleHomeClick(event) {
+        // Prevent default anchor behavior (browser jumping to #fragment)
+        event.preventDefault();
+        switchDocument("start"); // "start" should be name of key in SECTION_CONTENT holding home page HTML
     }
 
     /**
@@ -420,8 +477,13 @@
         });
 
         // Gradual open and smooth scroll for TOC links
-        document.querySelectorAll('.toc-list a, .site-title a').forEach(anchor => {
-            anchor.addEventListener('click', switchDocument);
+        document.querySelectorAll('.toc-list a').forEach(anchor => {
+            anchor.addEventListener('click', handleTocClick);
+        });
+
+        // Opening home page
+        document.querySelectorAll('.site-title a').forEach(anchor => {
+            anchor.addEventListener('click', handleHomeClick)
         });
 
         // Navigation buttons
