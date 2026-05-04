@@ -22,7 +22,7 @@
 
 ## inputfile.py (https://github.com/bkuz114/inputfile-parser)
 - Version: 1.0.0+ (commit 05a57f5)
-  https://github.com/bkuz114/inputfile-parser/commit/05a57f52e5cf13e4199d10c11f6fbf2b00e04109
+  https://github.com/bkuz114/inputfile-parser/commit/2c6856406c63125d05b761b387a2c049a8ad97d3 
 - Original license: MIT
 - Files vendored:
   - inputfile.py → inputfile.py

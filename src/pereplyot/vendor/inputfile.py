@@ -56,6 +56,30 @@ import json
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Optional, Any
+import random
+
+# ============================================================================
+# Helper functions
+# ============================================================================
+
+
+def random_digit_string(x: int) -> str:
+    """
+    Generate a string of random digits of length x.
+    (for generating unique ids)
+
+    Args:
+        x: The desired length of the output string.
+
+    Returns:
+        A string of length x where each character is a random digit '0'-'9'.
+    """
+    result = ""
+    for _ in range(x):  # repeat x times
+        digit = str(random.randint(0, 9))  # convert integer 0-9 to string
+        result = result + digit  # append to the result
+    return result
+
 
 # ============================================================================
 # Data structures
@@ -68,10 +92,12 @@ class FileRef:
 
     Attributes:
         path: Path to the file (Parser will resolve relative to Document.root).
+        id: Optional id (defaults to random 5 digit integer string)
         name: Optional display name (overrides the filename in reports).
     """
 
     path: Path
+    id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     name: Optional[str] = None
 
     def __post_init__(self) -> None:
@@ -92,11 +118,13 @@ class Chapter:
     Attributes:
         number: Chapter number (e.g., 1, 2, 3).
         files: List of file references in this chapter.
+        id: Optional id (defaults to random 5 digit integer string)
         _name: Optional internal name storage. Access via `name` property.
     """
 
     number: int
     files: list[FileRef]
+    id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     _name: Optional[str] = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -129,11 +157,13 @@ class Part:
     Attributes:
         number: Part number (e.g., 1, 2, 3).
         chapters: List of chapters in this part.
+        id: Optional id (defaults to random 5 digit integer string)
         _name: Optional internal name storage. Access via `name` property.
     """
 
     number: int
     chapters: list[Chapter]
+    id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     _name: Optional[str] = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -177,6 +207,7 @@ class Document:
         year: Optional publication year.
         language: Optional language code (e.g., "en").
         metadata: Dictionary of any other key-value pairs from the input file.
+        id: Optional id (defaults to random 5 digit integer string)
     """
 
     title: str
@@ -192,6 +223,9 @@ class Document:
 
     # Catch-all for unknown keys
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    # specific to the structure
+    id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
 
     def __post_init__(self) -> None:
         """Validate that exactly one of chapters or parts is non-empty."""
