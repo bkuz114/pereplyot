@@ -521,6 +521,17 @@
             anchor.addEventListener('click', handleHomeClick)
         });
 
+        // start button on basic home page
+        // Note: use event delegation as the button will be removed
+        // from DOM when navigating to new content.
+        document.addEventListener('click', (event) => {
+            const startButton = event.target.closest('#splash-start');
+            if (startButton) {
+                // "first"  is special section key made by cli.py for first chapter info
+                switchDocument("first");
+            }
+        });
+
         // Navigation buttons
         if (navPrev) {
             navPrev.addEventListener('click', goToPrevTarget);

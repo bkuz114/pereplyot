@@ -609,6 +609,10 @@ def create_home(doc: Document, style: str) -> str:
             <div class="splash-meta">
                 {metadata_html}
             </div>
+
+            <div class="splash-start-wrapper">
+                <button id="splash-start" class="splash-start-btn">Start</button>
+            </div>
         </div>
         """
 
@@ -1200,33 +1204,41 @@ def process_files(
     # content when user clicks a TOC link
     html_dict = {}
     total_failed = 0
+    # id of first chapter in binder (for special "first" key in dictionary)
+    first_id = None
 
     # Scenario 1: has parts
-    for i, part in enumerate(doc.parts):
-        # get id of last chapter in previous part
-        prev_part_last_chap_id = None
-        if i > 0:
-            prev_part_chapters = doc.parts[i - 1].chapters
-            prev_part_last_chap_id = prev_part_chapters[len(prev_part_chapters) - 1].id
-        # get id of first chapter in next part
-        next_part_first_chap_id = None
-        if i < len(doc.parts) - 1:
-            next_part_chapters = doc.parts[i + 1].chapters
-            next_part_first_chap_id = next_part_chapters[0].id
-        chapters_html, chapters_tocs, chapters_failed_count = process_chapters(
-            part.chapters,
-            strict,
-            indent,
-            prev_part_last_chap_id,
-            next_part_first_chap_id,
-        )
-        # add part id as key to html_dict: its value
-        # will be the HTML content it opens to --
-        # should be the first chapter in this part
-        html_dict[part.id] = chapters_html[part.chapters[0].id]
-        total_failed += chapters_failed_count
-        # add next set of chapter id / contents to html dictionary for js
-        html_dict = html_dict | chapters_html
+    if doc.parts:
+        for i, part in enumerate(doc.parts):
+            # get id of last chapter in previous part
+            prev_part_last_chap_id = None
+            if i > 0:
+                prev_part_chapters = doc.parts[i - 1].chapters
+                prev_part_last_chap_id = prev_part_chapters[
+                    len(prev_part_chapters) - 1
+                ].id
+            # get id of first chapter in next part
+            next_part_first_chap_id = None
+            if i < len(doc.parts) - 1:
+                next_part_chapters = doc.parts[i + 1].chapters
+                next_part_first_chap_id = next_part_chapters[0].id
+            chapters_html, chapters_tocs, chapters_failed_count = process_chapters(
+                part.chapters,
+                strict,
+                indent,
+                prev_part_last_chap_id,
+                next_part_first_chap_id,
+            )
+            # add part id as key to html_dict: its value
+            # will be the HTML content it opens to --
+            # should be the first chapter in this part
+            html_dict[part.id] = chapters_html[part.chapters[0].id]
+            total_failed += chapters_failed_count
+            # add next set of chapter id / contents to html dictionary for js
+            html_dict = html_dict | chapters_html
+
+        # save id of first chapter
+        first_id = doc.parts[0].chapters[0].id
 
     # Scenario 2: flat structure (only chapters, no parts)
     if doc.chapters:
@@ -1234,6 +1246,11 @@ def process_files(
         html_dict, chapters_tocs, total_failed = process_chapters(
             doc.chapters, strict, indent, None, None
         )
+        # save id of first chapter
+        first_id = doc.chapters[0].id
+
+    # create special section for first chapter
+    html_dict["first"] = html_dict[first_id]
 
     logger.info(
         f"\n✅ Processed {len(doc.files) - total_failed} of {len(doc.files)} files"
