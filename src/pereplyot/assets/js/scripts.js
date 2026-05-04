@@ -345,7 +345,6 @@
         const newContent = newContentData?.content;
         const prevKey = newContentData?.prev;
         const nextKey = newContentData?.next;
-        console.log(`prev, next: ${prevKey}, ${nextKey}`);
 
         if (!newContent) {
             console.warn(`Section key found, but no "content" key in its value: ${sectionKey} (did cli.py update how its constructing the dictionaries?)`);
