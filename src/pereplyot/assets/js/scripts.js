@@ -379,18 +379,14 @@
         container.style.opacity = '0';
         setTimeout(() => {
             container.innerHTML = newContent;
+            // Scroll to top after content is swapped but before fade in
+            document.documentElement.scrollTop = 0;
 
             // Rebuild navigation targets for the new content
             navTargets = buildNavTargets();
             currentTargetIndex = navTargets.length > 0 ? 0 : -1;
             updateNavButtons();
             updateChapterNavButtons();
-
-            // Scroll to top after content is swapped but before fade in
-            topAnchor.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
 
             container.style.opacity = '1';
         }, 150); // 150ms matches CSS transition on #main-content; if you change here change there
