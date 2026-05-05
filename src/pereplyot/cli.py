@@ -20,6 +20,7 @@ Note:
 For more information, see README.md and CHANGELOG.md.
 """
 
+from datetime import datetime as dt
 import os
 import sys
 import argparse
@@ -134,6 +135,18 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
+def timestamp() -> str:
+    """Return a timestamp string safe for use in filenames.
+
+    Returns:
+        str: Current timestamp in format YYYY_MM_DD-HH_MM_SS.
+    """
+    # format the datetime without any spaces
+    fmt = "%Y_%m_%d-%H_%M_%S"
+    ct = dt.now().strftime(fmt)
+    return str(ct)
+
+
 def read_file(filepath: Path) -> str:
     """
     Reads and validates file and returns raw content.
@@ -195,6 +208,123 @@ def sequential_replacements(text: str, replacements: list[list[str, str]]) -> st
     for target, replacement in replacements:
         text = text.replace(target, replacement)
     return text
+
+
+# ============================================================================
+# MARKDOWN + YAML FRONTMATTER PROCESSING
+# ============================================================================
+
+
+def determine_output(
+    base_output: Path,
+    title: str,
+    nest: bool,
+    use_title: bool,
+    use_timestamp: bool,
+) -> Tuple[Path, Path]:
+    """
+    Determines path to output dir based on user-provided flags
+
+    Args:
+        base_output: Base output dir (other dirs will nest in this if needed)
+        title: Project title (used for constructing dirs and/or filenames when use_title True).
+            *NOTE*: whitespace converted to _ to avoid scripting issues
+        nest: (boolean) Whether --nest flag set.
+            When True, per-run dirs are created.
+            When False, flat files in output
+        use_title: (boolean) Whether --use-title flag set.
+            When True, names output dir and/or filename with title
+        use_timestamp: (boolean) Whether --timestamp flag set.
+            When True, timestamps dir and/or filename
+
+    Returns: Tuple of Path to HTML file, Path to output dir
+
+    Examples:
+        # No flags (flat files in default output dir)
+        /dist/index.html
+        *WARNING*: collisions on repeated runs
+
+        # --use-title (flat files + title on filename)
+        /dist/proj1.html
+        *WARNING*: collisions on repeated runs of same project
+
+        # --timestamp (timestamp file)
+        /dist/20260429_143052.html
+
+        # --use-title --timestamp (title + ts on filename)
+        /dist/proj1_20260429_143052.html
+
+        # --use-title --nest (dedicated project dir)
+        /dist/proj1/index.html
+        *WARNING*: collisions on repeated runs of same project
+
+        # --timestamp --nest (per run timestamp dir)
+        /dist/20260429_143052/index.html
+
+        # --use-title --timestamp --nest (dedicated project dir + nested timestamp dir)
+        /dist/proj1/20260429_143052/index.html
+    """
+    # resolve custom output relative cwd
+    base_output = base_output.resolve()
+    # ensure title supplied if want to --use-title
+    if use_title and not title:
+        raise ValueError("No title when specifying --use-title")
+    # rule out invalid combo: ~timestamp, ~use-title, nest
+    if nest and not use_timestamp and not use_title:
+        raise ValueError("--nest must have either --timestamp or --use-title")
+
+    # convert whitespace to _ in title and make lower case
+    title = title.replace(" ", "_").lower()
+
+    # Output directory and filename.
+    #
+    # dist/index.html            //
+    # dist/proj.html             // --use-title
+    # dist/12345.html            // --timestamp
+    # dist/proj_12345.html       // --use-title, --timestamp
+    # dist/proj/index.html       // --use-title, --nest
+    # dist/12345/index.html      // --timestamp, --nest
+    # dist/proj/12345/index.html // --use-title, --timestamp, --nest
+
+    default_filename = "index.html"
+    ts = timestamp()
+
+    if not use_timestamp and not use_title and not nest:
+        # default no args (dist/index.html)
+        output_dir = base_output
+        filename = default_filename
+    elif not use_timestamp and not use_title and nest:
+        # not valid, doesn't make sense
+        raise ValueError("--nest must have either --timestamp or --use-title")
+    elif use_timestamp and not use_title and not nest:
+        # timestamped file in default dir
+        output_dir = base_output
+        filename = f"{ts}.html"
+    elif not use_timestamp and use_title and not nest:
+        # name file after project , into default dir (not nested)
+        output_dir = base_output
+        filename = f"{title}.html"
+    elif use_timestamp and use_title and not nest:
+        # name file after project + ts , into default dir
+        output_dir = base_output
+        filename = f"{title}_{ts}.html"
+    elif not use_timestamp and use_title and nest:
+        # dedicated (nested) proj dir
+        output_dir = base_output / title
+        filename = default_filename
+    elif use_timestamp and use_title and nest:
+        # dedicated (nested) proj dir with timestamped dir
+        output_dir = base_output / title / ts
+        filename = default_filename
+    elif use_timestamp and not use_title and nest:
+        # dedicated (nested) timestampped dir
+        output_dir = base_output / ts
+        filename = default_filename
+
+    # Final path to HTML file
+    output_file = output_dir / filename
+
+    return output_file, output_dir
 
 
 # ============================================================================
@@ -1392,6 +1522,27 @@ def main():
         help=f"Path to template file (e.g., templates/default_template.html). {path_help}",
     )
     parser.add_argument(
+        "-n",
+        "--nest",
+        required=False,
+        action="store_true",
+        help="Per-run directories created.",
+    )
+    parser.add_argument(
+        "-u",
+        "--use-title",
+        required=False,
+        action="store_true",
+        help="Use project title in dir (if --nest) or filename (if no --nest).",
+    )
+    parser.add_argument(
+        "-t",
+        "--timestamp",
+        required=False,
+        action="store_true",
+        help="Timestamp dir (if --nest) or file (if no --nest)",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
         help="Overwrite existing output file if it exists",
@@ -1447,6 +1598,16 @@ def main():
     template_path = args.template.resolve()
     assets_path = args.assets.resolve()
 
+    # parse input JSON into Document object
+    input_file = args.input.resolve()  # resolve rel cwd
+    doc = Document.from_json(input_file)
+    title = doc.title
+
+    # determine output directory
+    output_file, output_dir = determine_output(
+        output_dir, title, args.nest, args.use_title, args.timestamp
+    )
+
     # delete output dir if exists and --clean provided
     if args.clean:
         if not args.force:
@@ -1455,11 +1616,6 @@ def main():
         if output_dir.exists():
             shutil.rmtree(output_dir)
             logger.info(f"🧹 Cleaned output directory: {output_dir}")
-
-    # parse input JSON into Document object
-    input_file = args.input.resolve()  # resolve rel cwd
-    doc = Document.from_json(input_file)
-    title = doc.title
 
     # Final assets directory (shared across all files)
     final_assets_dir = output_dir / "assets"
@@ -1471,7 +1627,7 @@ def main():
     # Process all the files
     binder = generate_binder(
         doc,
-        output_dir / "binder.html",
+        output_file,
         template_path,
         assets_path,
         final_assets_dir,
