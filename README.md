@@ -31,9 +31,9 @@ pip install pereplyot
 pereplyot manifest.json
 ```
 
-Output is written to `dist/binder.html`.
+Output is written to `dist/index.html`.
 
-### With custom output directory
+### With custom output directory (see more output options [here](#output))
 
 ```bash
 pereplyot manifest.json --output site/
@@ -124,20 +124,6 @@ pereplyot examples/the-fishing-book/manifest.json
 | `.docx` | Microsoft Word | Converted via python-docx |
 | `.rtf` | Microsoft rtf | Converted via rtfparse |
 
-## Output Structure
-
-```
-dist/
-├── binder.html          # Main HTML file
-└── assets/
-    ├── css/
-    │   ├── styles.css      # Core styles
-    │   └── themes.css      # Theme variables
-    └── js/
-        ├── scripts.js      # TOC interaction, content swapping
-        └── sections.js     # Generated content dictionary
-```
-
 ## How It Works
 
 1. **Parse manifest** – Load JSON and build document structure
@@ -145,8 +131,81 @@ dist/
 3. **Group by chapter** – Files in same chapter combined (with `<hr>` between)
 4. **Generate TOC** – Hierarchical navigation from document structure
 5. **Write `sections.js`** – Dictionary mapping chapter IDs to HTML content
-6. **Write `binder.html`** – Shell with TOC (content loaded dynamically)
+6. **Write `index.html`** – Shell with TOC (content loaded dynamically)
 7. **Click TOC** – JavaScript swaps content with smooth animation
+
+## Output
+
+### Default Behavior
+
+Without additional flags, pereplyot writes to `dist/index.html` with supporting assets in `dist/assets/`:
+
+```
+dist/
+├── index.html
+└── assets/
+	├── css/
+	│   ├── styles.css
+	│   └── themes.css
+	└── js/
+		├── scripts.js
+		└── sections.js
+```
+
+### Customizing Output Location
+
+Use `--output <directory>` to change the base output directory:
+
+```bash
+pereplyot input.json --output ./reports
+```
+
+```
+reports/
+├── index.html
+└── assets/...
+```
+
+### Advanced Output Control
+
+Three optional flags give fine-grained control over filenames and directory structure:
+
+| Flag | Effect |
+|------|--------|
+| `--timestamp` | Adds timestamp (YYYY_MM_DD-HH_MM_SS) to filename or directory |
+| `--use-title` | Uses document title in filename or directory name |
+| `--nest` | Creates per-run subdirectories (requires `--timestamp` or `--use-title`) |
+
+These flags combine as follows (examples use default `dist/` as base):
+
+| `--use-title` | `--timestamp` | `--nest` | Output within `dist/` |
+|---------------|---------------|----------|----------------------|
+| — | — | — | `index.html` |
+| — | ✓ | — | `2025_05_05-14_30_22.html` |
+| ✓ | — | — | `my_project.html` |
+| ✓ | ✓ | — | `my_project_2025_05_05-14_30_22.html` |
+| ✓ | — | ✓ | `my_project/index.html` |
+| — | ✓ | ✓ | `2025_05_05-14_30_22/index.html` |
+| ✓ | ✓ | ✓ | `my_project/2025_05_05-14_30_22/index.html` |
+
+### Examples
+
+```bash
+# Simple custom location
+pereplyot input.json --output ./docs
+
+# Timestamped file (no overwrites)
+pereplyot input.json --timestamp
+
+# Project directory with timestamped subdirectory
+pereplyot input.json --use-title --timestamp --nest --output ./archive
+```
+
+### Notes
+
+- `--nest` requires either `--timestamp` or `--use-title` (or both)
+- Document titles are sanitized: spaces become underscores, text is lowercased
+- Assets are always copied to a `dist/assets/` subdirectory relative to the final output file
 
 ## Customization
 
