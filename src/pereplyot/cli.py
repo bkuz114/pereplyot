@@ -207,7 +207,7 @@ def parse_frontmatter(content: str) -> tuple[dict, str]:
     Parse YAML frontmatter from markdown content and return both.
 
     Args:
-        content: string content of an .md file (including YAML frontmatter)
+        content: string content of a markdown file (including YAML frontmatter)
 
     Returns:
         (metadata_dict, remaining_markdown_string)
@@ -625,14 +625,15 @@ def convert_markdown_to_html(filepath: str) -> str:
     Convert Markdown file to HTML using python-markdown.
 
     Args:
-        filepath: Path to a .md file
+        filepath: Path to a markdown file
 
     Returns: HTML string with heading IDs added
     """
+    valid_extensions = [".md", ".markdown"]
     if not filepath.exists():
         raise Exception(f".md file {filepath} does not exist!")
-    if not filepath.suffix == ".md":
-        raise Exception(f"File is not .md! {filepath}")
+    if filepath.suffix not in valid_extensions:
+        raise Exception(f"File is not markdown! {filepath}")
 
     # extract content
     raw_content = read_file(filepath)
@@ -1361,7 +1362,7 @@ def main():
     )
 
     parser = argparse.ArgumentParser(
-        description="Generate an offline HTML page for navigating a binder of documents (.txt, .md, or .docx)",
+        description="Generate an offline HTML page for navigating a binder of documents (.txt, .md, .markdown, or .docx)",
         epilog="Example: pereplyot example/fishing_doc.json --force",
     )
     parser.add_argument(
