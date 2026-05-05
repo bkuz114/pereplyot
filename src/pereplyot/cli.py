@@ -795,11 +795,11 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     if not filepath.suffix.lower() == ".rtf":
         raise Exception(f"File is not .rtf! {filepath}")
 
-    with open(filepath, 'rb') as f:
+    with open(filepath, "rb") as f:
         rtf_bytes = f.read()
 
     # Decode as ascii, ignoring errors (RTF is 7-bit)
-    rtf_bytes = rtf_bytes.decode('ascii', errors='ignore')
+    rtf_bytes = rtf_bytes.decode("ascii", errors="ignore")
     text_string = rtf_to_text(rtf_bytes)
 
     return convert_raw_text_to_html(text_string, indent)
