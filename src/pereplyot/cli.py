@@ -632,7 +632,7 @@ def convert_markdown_to_html(filepath: str) -> str:
     valid_extensions = [".md", ".markdown"]
     if not filepath.exists():
         raise Exception(f".md file {filepath} does not exist!")
-    if filepath.suffix not in valid_extensions:
+    if filepath.suffix.lower() not in valid_extensions:
         raise Exception(f"File is not markdown! {filepath}")
 
     # extract content
@@ -742,7 +742,7 @@ def convert_txt_to_html(filepath: Path, indent: int) -> str:
     """
     if not filepath.exists():
         raise Exception(f".txt file {filepath} does not exist!")
-    if not filepath.suffix == ".txt":
+    if not filepath.suffix.lower() == ".txt":
         raise Exception(f"File is not .txt! {filepath}")
 
     raw_text = read_file(filepath)
@@ -762,7 +762,7 @@ def convert_docx_to_html(filepath: Path) -> str:
     """
     if not filepath.exists():
         raise Exception(f".docx file {filepath} does not exist!")
-    if not filepath.suffix == ".docx":
+    if not filepath.suffix.lower() == ".docx":
         raise Exception(f"File is not .docx! {filepath}")
     result = mammoth.convert_to_html(filepath)
     # Log any warnings (e.g., unrecognized styles)
@@ -792,7 +792,7 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     """
     if not filepath.exists():
         raise Exception(f".docx file {filepath} does not exist!")
-    if not filepath.suffix == ".rtf":
+    if not filepath.suffix.lower() == ".rtf":
         raise Exception(f"File is not .rtf! {filepath}")
 
     with open(filepath, 'rb') as f:
