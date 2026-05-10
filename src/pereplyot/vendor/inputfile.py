@@ -55,7 +55,7 @@ Example parser usage:
 import json
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Union, Any
 import random
 
 # ============================================================================
@@ -81,12 +81,41 @@ def random_digit_string(x: int) -> str:
     return result
 
 
+def resolve_base(
+    raw_root: Any, json_parent: Path, parent_base: Optional[Path] = None
+) -> Path:
+    """
+    Resolve a root value to an absolute base Path.
+
+    Args:
+        raw_root: Value from JSON (None, empty string, relative path, or absolute path)
+        json_parent: Path to JSON file's parent directory (ultimate fallback)
+        parent_base: Optional pre-resolved base for relative resolution (e.g., Document.root)
+
+    Returns:
+        Absolute Path to use as base for chapter resolution (never None)
+    """
+    # No root provided → fallback to JSON parent
+    if not raw_root:
+        return parent_base if parent_base is not None else json_parent
+
+    root_path = Path(raw_root)
+
+    # Absolute root → use as-is
+    if root_path.is_absolute():
+        return root_path
+
+    # Relative root → resolve against parent_base if provided, else JSON parent
+    base = parent_base if parent_base is not None else json_parent
+    return (base / root_path).resolve()
+
+
 # ============================================================================
 # Data structures
 # ============================================================================
 
 
-@dataclass(frozen=True)
+@dataclass
 class FileRef:
     """Reference to a single source file within a chapter.
 
@@ -94,11 +123,14 @@ class FileRef:
         path: Path to the file (Parser will resolve relative to Document.root).
         id: Optional id (defaults to random 5 digit integer string)
         name: Optional display name (overrides the filename in reports).
+        parent (Optional[Chapter]): Back-reference to parent chapter.
+            Set automatically by Document.from_json().
     """
 
     path: Path
     id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     name: Optional[str] = None
+    parent: Optional["Chapter"] = None
 
     def __post_init__(self) -> None:
         if not self.path or str(self.path).strip() == "":
@@ -120,12 +152,15 @@ class Chapter:
         files: List of file references in this chapter.
         id: Optional id (defaults to random 5 digit integer string)
         _name: Optional internal name storage. Access via `name` property.
+        parent (Optional[Union[Part, Document]]): Back-reference to parent part or document.
+            Set automatically by Document.from_json().
     """
 
     number: int
     files: list[FileRef]
     id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     _name: Optional[str] = field(default=None, repr=False)
+    parent: Optional[Union["Part", "Document"]] = None
 
     def __post_init__(self) -> None:
         if self.number < 1:
@@ -159,12 +194,16 @@ class Part:
         chapters: List of chapters in this part.
         id: Optional id (defaults to random 5 digit integer string)
         _name: Optional internal name storage. Access via `name` property.
+        parent (Optional[Document]): Back-reference to parent document.
+            Set automatically by Document.from_json().
     """
 
     number: int
     chapters: list[Chapter]
+    root: Optional[Path] = None
     id: Optional[str] = field(default_factory=lambda: random_digit_string(5))
     _name: Optional[str] = field(default=None, repr=False)
+    parent: Optional["Document"] = None
 
     def __post_init__(self) -> None:
         if self.number < 1:
@@ -313,7 +352,7 @@ class Document:
 
         # Helper for parsing chapters (shared logic)
         def parse_chapters(
-            chapters_data: list[dict], root: Path, default_ext: Optional[str]
+            chapters_data: list[dict], base: Path, default_ext: Optional[str]
         ) -> list[Chapter]:
             """Parse a list of chapter dicts into Chapter objects."""
             chapters_data = auto_number(chapters_data, "number")
@@ -327,27 +366,25 @@ class Document:
                     raise ValueError(f"Chapter {ch_number} must have at least one file")
 
                 files = []
+
                 for file_entry in files_data:
                     # Handle both string and dict formats
                     if isinstance(file_entry, str):
                         # string case: i.e. file in JSON defined as "./a/b.txt"
-                        if root:
-                            # resolve relative to document root if provided
-                            path = root / file_entry
-                        else:
-                            # treat path as is
-                            path = Path(file_entry)
-                        file_ref = FileRef(path=path)
+                        raw_path = file_entry
+                        name = None
                     else:
                         # dict case: i.e. file in JSON defined as {"path": "./a/b.txt", "name": "shortname"}
-                        if root:
-                            # resolve relative to document root if provided
-                            path = root / file_entry["path"]
-                        else:
-                            # treat path as is
-                            path = Path(file_entry["path"])
+                        raw_path = file_entry["path"]
                         name = file_entry.get("name")
-                        file_ref = FileRef(path=path, name=name)
+
+                    file_path = Path(raw_path)
+                    if file_path.is_absolute():
+                        path = file_path
+                    else:
+                        path = base / file_path
+
+                    file_ref = FileRef(path=path, name=name)
 
                     if default_extension and not path.suffix:
                         path = path.with_suffix(default_extension)
@@ -367,18 +404,17 @@ class Document:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        # Define fallback for root path resolution
+        resolve_roots_relative_to = filepath.parent
+
         # Pop required and optional fields from JSON
         title = data.pop("title", "Untitled")
-        root = data.pop("root", None)
-        # Document object will expect root to be a Path
-        if root:
-            root_path = Path(root)
-            if root_path.is_absolute():
-                # root was absolute -- keep as-is
-                root = root_path
-            else:
-                # root was relative -- resolve rel source json file
-                root = (filepath.parent / root_path).resolve()
+        raw_doc_root = data.pop("root", None)
+        # Resolve base for chapter resolution (always a Path)
+        doc_base = resolve_base(raw_doc_root, resolve_roots_relative_to)
+        # Root to store on Document (None if not provided, otherwise resolved Path)
+        doc_root = doc_base if raw_doc_root is not None else None
+
         default_extension = data.pop("default_extension", None)
         author = data.pop("author", None)
         year = data.pop("year", None)
@@ -396,12 +432,12 @@ class Document:
 
         metadata = data  # remaining keys become metadata
 
-        # Parse flat structure
         if chapters_data:
-            chapters = parse_chapters(chapters_data, root, default_extension)
-            return cls(
+            # Parse flat structure
+            chapters = parse_chapters(chapters_data, doc_base, default_extension)
+            doc = cls(
                 title=title,
-                root=root,
+                root=doc_root,
                 chapters=chapters,
                 parts=[],
                 default_extension=default_extension,
@@ -410,35 +446,68 @@ class Document:
                 language=language,
                 metadata=metadata,
             )
+        elif parts_data:
+            # Parse hierarchical structure
+            parts_data = auto_number(parts_data, "number")
+            parts = []
 
-        # Parse hierarchical structure
-        parts_data = auto_number(parts_data, "number")
-        parts = []
-        for part_data in parts_data:
-            part_number = part_data["number"]
-            part_name = part_data.get("name")
-            part_chapters_data = part_data.get("chapters", [])
+            for part_data in parts_data:
+                part_number = part_data["number"]
+                part_name = part_data.get("name")
+                part_chapters_data = part_data.get("chapters", [])
+                raw_part_root = part_data.get("root", None)
 
-            if not part_chapters_data:
-                raise ValueError(f"Part {part_number} must have at least one chapter")
+                if not part_chapters_data:
+                    raise ValueError(
+                        f"Part {part_number} must have at least one chapter"
+                    )
 
-            part_chapters = parse_chapters(part_chapters_data, root, default_extension)
-            part = Part(number=part_number, chapters=part_chapters)
-            if part_name is not None:
-                part.name = part_name
-            parts.append(part)
+                # Resolve base for this part's chapters
+                part_base = resolve_base(
+                    raw_part_root, resolve_roots_relative_to, parent_base=doc_base
+                )
+                part_root = part_base if raw_part_root is not None else None
 
-        return cls(
-            title=title,
-            root=root,
-            chapters=[],
-            parts=parts,
-            default_extension=default_extension,
-            author=author,
-            year=year,
-            language=language,
-            metadata=metadata,
-        )
+                part_chapters = parse_chapters(
+                    part_chapters_data, part_base, default_extension
+                )
+                part = Part(number=part_number, chapters=part_chapters, root=part_root)
+                if part_name is not None:
+                    part.name = part_name
+                parts.append(part)
+
+            doc = cls(
+                title=title,
+                root=doc_root,
+                chapters=[],
+                parts=parts,
+                default_extension=default_extension,
+                author=author,
+                year=year,
+                language=language,
+                metadata=metadata,
+            )
+
+        # link parents to all Chapter, Part, FileRef in Document
+        doc._link_parents()
+
+        return doc
+
+    def _link_parents(self) -> None:
+        """Set parent references on all child objects."""
+        # Hierarchical structure (parts)
+        for part in self.parts:
+            part.parent = self
+            for chapter in part.chapters:
+                chapter.parent = part
+                for file_ref in chapter.files:
+                    file_ref.parent = chapter
+
+        # Flat structure (chapters only)
+        for chapter in self.chapters:
+            chapter.parent = self
+            for file_ref in chapter.files:
+                file_ref.parent = chapter
 
     def serialize(self) -> None:
         """Serialize this Document instance to a JSON string."""
@@ -453,6 +522,8 @@ class Document:
                 }
                 if obj._name is not None:
                     result["name"] = obj._name
+                if obj.root is not None:
+                    result["root"] = str(obj.root)
                 return result
             elif isinstance(obj, Chapter):
                 result = {
