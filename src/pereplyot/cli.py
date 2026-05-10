@@ -497,13 +497,8 @@ def create_chapter_toc_entries(
             continue
 
         # Ensure heading has an ID
-        heading_id = heading.get("id")
-        if not heading_id:
-            # Generate an ID from text content
-            text = heading.get_text(strip=True)
-            heading_id = re.sub(r"[^a-z0-9]+", "-", text.lower())
-            heading_id = re.sub(r"^-|-$", "", heading_id)
-            heading["id"] = heading_id
+        if not heading.get("id"):
+            heading["id"] = random_digit_string(5)
 
         # add .nav-target class (for js intra-page navigation)
         beautiful_soup_utils.add_classes(heading, ["nav-target"])
