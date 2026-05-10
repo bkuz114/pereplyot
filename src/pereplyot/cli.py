@@ -5,7 +5,7 @@ JSON input file and creates offline, static HTML allowing you to navigate easily
 the documents.
 
 Usage:
-    pereplyot INPUT [--output DIR] [--template FILE] [--force] [--strict]
+    pereplyot INPUT [--output DIR] [--template FILE] [--force] [--nuclear] [--strict]
                [--quiet] [--clean] [--browser] [--home HOMEPAGE_STYLE]
 
 Examples:
@@ -133,6 +133,48 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
+
+def make_path_writable(function, path):
+    """Make a path writable and retry the function."""
+    os.chmod(path, stat.S_IWRITE)
+    function(path)
+
+
+def remove_path(path: Path, force: bool, nuclear: bool) -> None:
+    """Remove a path, optionally handling Windows read-only attributes.
+
+    Args:
+        path: The path to remove.
+        force: If False, raises FileExistsError when the path exists.
+               If True, attempts normal deletion via shutil.rmtree.
+        nuclear: If True, uses aggressive deletion that strips read-only
+                 permissions before retrying (Windows only). Implies force.
+
+    Raises:
+        FileExistsError: If force and nuclear are both False and path exists.
+
+    Notes:
+        The nuclear option is a Windows-specific workaround for `[WinError 5] Access is denied`
+        errors that occur even when the path is deletable via Explorer. It applies
+        `os.chmod(path, stat.S_IWRITE)` to any item that fails deletion and retries.
+
+        Use nuclear only as a last resort when standard --force fails with permission errors.
+    """
+    if not path.exists():
+        return
+
+    try:
+        if nuclear:
+            shutil.rmtree(path, onerror=make_path_writable)
+        elif force:
+            shutil.rmtree(path)
+        else:
+            raise FileExistsError(
+                f"Path already exists: {path}\nUse --force to overwrite."
+            )
+    except Exception as e:
+        raise RuntimeError(f"Failed to remove path. Error: {e}")
 
 
 def timestamp() -> str:
@@ -958,7 +1000,7 @@ def post_process_chapter_html(html: str, title: str) -> str:
 
 
 def copy_assets_to_output(
-    assets_path: Path, assets_dest_dir: Path, force: bool = False
+    assets_path: Path, assets_dest_dir: Path, force: bool = False, nuclear: bool = False
 ) -> Path:
     """
     Copy the assets directory to the output file's parent directory.
@@ -973,6 +1015,9 @@ def copy_assets_to_output(
         assets_dest_dir: Path to the copy assets to.
         force: If True, overwrite existing assets directory; if False, raise
                error if destination already exists.
+        nuclear: If True, uses aggressive deletion that strips read-only
+                 permissions before retrying (Windows only). Implies force.
+                 This is used when force alone fails (see 62b1330 and related)
 
     Returns: None
 
@@ -1004,13 +1049,16 @@ def copy_assets_to_output(
 
     # Handle existing destination
     if assets_dest_dir.exists():
-        if force:
-            shutil.rmtree(assets_dest_dir)  # Remove entire existing directory
-        else:
-            raise FileExistsError(
-                f"Destination already exists: {assets_dest_dir}\n"
-                f"Use force=True to overwrite."
-            )
+        try:
+            if force:
+                remove_path(assets_dest_dir, force, nuclear)
+            else:
+                raise FileExistsError(
+                    f"Destination already exists: {assets_dest_dir}\n"
+                    f"Use force=True to overwrite."
+                )
+        except Exception as e:
+            raise RuntimeError(f"Failed to remove existing assets dir: {e}")
 
     # Copy the directory
     try:
@@ -1389,6 +1437,7 @@ def generate_binder(
     final_assets_dir: Path,
     js_helper_path: Path,
     force: bool,
+    nuclear: bool,
     strict: bool,
     home_style: str,
     hide_navigation: bool,
@@ -1406,6 +1455,8 @@ def generate_binder(
             directory (e.g., dist/assets/).
         force: If True, overwrite existing output files. If False, raise
             FileExistsError when output already exists.
+        nuclear: If True, uses aggressive deletion that strips read-only
+                 permissions before retrying (Windows only). Implies force.
         strict: If True, abort on first error and re-raise the exception.
             If False, log errors and continue processing remaining files.
         home_style: str indicating style for homepage ("basic", "descriptive")
@@ -1470,7 +1521,7 @@ def generate_binder(
     binder = write_html_file(final_html, output_file, force)
 
     # Copy assets once after all files processed (or before, doesn't matter)
-    copy_assets_to_output(assets_path, final_assets_dir, force)
+    copy_assets_to_output(assets_path, final_assets_dir, force, nuclear)
 
     # Write js helper file (do after copying assets in case it lives there)
     write_javascript_helper(content_dict, js_helper_path)
@@ -1548,6 +1599,12 @@ def main():
         help="Overwrite existing output file if it exists",
     )
     parser.add_argument(
+        "--nuclear",
+        action="store_true",
+        help="USE AT YOUR OWN RISK. Force delete output directory by removing "
+        "read-only permissions. Only use if --force fails with 'Access denied'.",
+    )
+    parser.add_argument(
         "--clean",
         action="store_true",
         help="Delete output directory before processing (requires --force)",
@@ -1610,11 +1667,11 @@ def main():
 
     # delete output dir if exists and --clean provided
     if args.clean:
-        if not args.force:
-            logger.error("❌ Error: --clean requires --force")
+        if not args.force and not args.nuclear:
+            logger.error("❌ Error: --clean requires --force or --nuclear")
             sys.exit(1)
         if output_dir.exists():
-            shutil.rmtree(output_dir)
+            remove_path(output_dir, args.force, args.nuclear)
             logger.info(f"🧹 Cleaned output directory: {output_dir}")
 
     # Final assets directory (shared across all files)
@@ -1633,6 +1690,7 @@ def main():
         final_assets_dir,
         js_helper_path,
         args.force,
+        args.nuclear,
         args.strict,
         args.home,
         args.no_navigation,
