@@ -112,6 +112,9 @@ MD_EXTENSIONS = [
 # tags to use in TOC generation
 TOC_TAGS = ["h1", "h2", "h3", "h4"]
 
+# tags to use for js intra-page navigation (<| |> buttons)
+NAV_TAGS = TOC_TAGS + ["hr"]
+
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -507,9 +510,6 @@ def create_chapter_toc_entries(
         if not tag.get("id"):
             tag["id"] = random_digit_string(5)
 
-        # add .nav-target class (for js intra-page navigation)
-        beautiful_soup_utils.add_classes(tag, ["nav-target"])
-
         # set default text for the entry if tag has no text (e.g. <hr>)
         entry_text = tag.get_text(strip=True) or "next"
 
@@ -588,6 +588,57 @@ def create_toc(doc: Document) -> str:
 # ============================================================================
 # DOCUMENT GENERATION
 # ============================================================================
+
+
+def make_tags_navigable(html: str) -> str:
+    """Find all navigable tags in document and add nav-target with id for js navigation.
+
+    This function parses an HTML string, identifies all specified navigable tags
+    (defined by NAV_TAGS constant), and adds both unique IDs and a 'nav-target'
+    class to each tag that doesn't already have an ID. This enables JavaScript
+    intra-page navigation functionality.
+    (see following commit, under "TOC fundamentals" for explanation of js intra-page nav)
+    https://github.com/bkuz114/pereplyot/commit/7f0660d0ce56bc9a8ab57785b9b642d603906d6f
+
+    Args:
+        html (str): The HTML string to process. Can be any valid HTML content.
+
+    Returns:
+        str: The modified HTML string with unique IDs and 'nav-target' classes
+             added to all navigable tags. Tags that already had IDs will only
+             receive the 'nav-target' class.
+
+    Raises:
+        BeautifulSoupParserError: If the HTML string cannot be parsed by BeautifulSoup.
+        NameError: If NAV_TAGS constant is not defined in the module scope.
+
+    Example:
+        >>> html = '<div><h2>Section 1</h2><p>Content</p></div>'
+        >>> NAV_TAGS = ['hr', 'h1', 'h2']
+        >>> result = make_tags_navigable(html)
+        >>> print(result)
+        <div><h2 class="nav-target" id="abc12">Section 1</h2><p>Content</p></div>
+
+    Note:
+        - The NAV_TAGS constant must be defined in the module containing this function
+        - IDs are generated using random_digit_string(5), which should be defined elsewhere
+        - Existing IDs are preserved; new IDs are only added to tags without one
+        - The function uses BeautifulSoup for HTML parsing and manipulation
+    """
+
+    # Parse the HTML string
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Find all HTML tags for intra-page navigation
+    for tag in soup.find_all(NAV_TAGS):
+        # assign id if not present (js uses for debug logs)
+        if not tag.get("id"):
+            tag["id"] = random_digit_string(5)
+        # add .nav-target class (for js intra-page navigation)
+        beautiful_soup_utils.add_classes(tag, ["nav-target"])
+
+    # convert back to string to return
+    return str(soup)
 
 
 def template_html(
@@ -1242,9 +1293,7 @@ def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, i
 
             # add <hr> if multiple files
             if i > 0:
-                # add nav-target class for js intra-page navigation
-                hr_id = random_digit_string(5)  # js needed for debugging
-                html += f"<hr class='nav-target' id='{hr_id}'>"
+                html += "<hr>"
             html += file_html
 
         except Exception as e:
@@ -1312,6 +1361,8 @@ def process_chapters(
         # create a TOC for the chapter with ids added in
         chapter_html, chapter_toc_entries = create_chapter_toc_entries(chapter_html)
         chapter_toc = render_toc(chapter_toc_entries)
+        # set up intra-page navigation within page HTML
+        chapter_html = make_tags_navigable(chapter_html)
 
         # id of previous chapter (either passed in
         # from previous part, or prev chapter in this chapter list)
