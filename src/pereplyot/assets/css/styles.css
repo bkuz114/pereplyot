@@ -23,6 +23,8 @@
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
 
     --transition-speed: 0.2s;
+
+    --header-height: 60px;
 }
 
 body {
@@ -56,7 +58,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: var(--header-height);
     background: var(--header-bg);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--header-border);
@@ -462,8 +464,25 @@ body {
 }
 
 /* ============================================================================
-   Intra-document Navigation Buttons
+   Intra-document Navigation
    ============================================================================ */
+
+/**
+ * css class added to intra-page navigation targets;
+ * the <| |> buttons scroll to each of these via js
+ * element.scrollIntoView which scrolls to top of element
+ *
+ * scroll-margin-top offsets the scroll by a given
+ * margin automatically (js looks for this property);
+ * do this to account for header height
+ */
+.nav-target {
+    scroll-margin-top: var(--header-height);
+}
+
+/**
+ * intra-document nav buttons
+ */
 
 .nav-controls {
     display: flex;
