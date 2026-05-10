@@ -920,6 +920,13 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
         if not para.strip():  # Skip empty paragraphs
             continue
 
+        # User-added <hr>: add and continue to avoid empty line on --indent option
+        # (will preprend &nsbp; to "<hr>" which causes blank &nsbp; line above <hr>)
+        # note: only check startswith "<hr" (not == "<hr>") in case css classes, etc.
+        if para.strip().startswith("<hr"):
+            html_parts.append(para)
+            continue
+
         lines = para.split("\n")
         if not lines:
             continue
