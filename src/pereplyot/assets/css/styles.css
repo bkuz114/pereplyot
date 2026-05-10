@@ -916,10 +916,11 @@ blockquote {
 
 /* Horizontal rule */
 hr {
-    margin: 2rem 0;
-    border: none;
+    width: 90%;
+    margin: 2rem auto;
+    border: 0;
     height: 1px;
-    background: var(--border);
+    background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
 }
 
 /* --------------------------------------------
