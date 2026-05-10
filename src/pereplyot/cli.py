@@ -109,6 +109,9 @@ MD_EXTENSIONS = [
     "smarty",
 ]
 
+# tags to use in TOC generation
+TOC_TAGS = ["h1", "h2", "h3", "h4"]
+
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -490,24 +493,31 @@ def create_chapter_toc_entries(
     soup = BeautifulSoup(html_content, "html.parser")
     toc_entries = []
 
-    # Find all headings
-    for heading in soup.find_all(["h1", "h2", "h3", "h4"]):
-        level = int(heading.name[1])
+    # Find all tags for TOC
+    for tag in soup.find_all(TOC_TAGS):
+        # if this is an <h1>, <h2>, etc. try to get number
+        # else default to level 1 assumption
+        level = 1
+        if tag.name and tag.name[1].isdigit():
+            level = int(tag.name[1])
         if level > max_depth:
             continue
 
-        # Ensure heading has an ID
-        if not heading.get("id"):
-            heading["id"] = random_digit_string(5)
+        # Ensure tag has an ID
+        if not tag.get("id"):
+            tag["id"] = random_digit_string(5)
 
         # add .nav-target class (for js intra-page navigation)
-        beautiful_soup_utils.add_classes(heading, ["nav-target"])
+        beautiful_soup_utils.add_classes(tag, ["nav-target"])
+
+        # set default text for the entry if tag has no text (e.g. <hr>)
+        entry_text = tag.get_text(strip=True) or "next"
 
         toc_entries.append(
             {
                 "level": level,
-                "text": heading.get_text(strip=True),
-                "id": heading.get("id"),
+                "text": entry_text,
+                "id": tag.get("id"),
             }
         )
 
