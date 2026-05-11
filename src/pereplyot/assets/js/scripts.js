@@ -42,10 +42,6 @@
     let prevSectionKey = null;
     let nextSectionKey = null;
 
-    // Intra-document navigation state
-    let navTargets = [];
-    let currentTargetIndex = -1;
-
     // =========================================================================
     // Generalized Panel Controls
     // =========================================================================
@@ -190,35 +186,71 @@
      */
 
     /**
-     * Build array of navigation targets from current DOM
-     * Targets are elements with class 'nav-target'
-     * @returns {Array<{id: string, element: HTMLElement, index: number}>}
+     * Find the nearest .nav-target in a given direction relative to the viewport.
+     * @param boolean direction - true for forward/below, false for back/above
+     * @returns {HTMLElement|null} The nearest target element, or null if none exists
      */
-    function buildNavTargets() {
+    function findNearestNavTarget(direction) {
         const container = document.getElementById('main-content');
-        if (!container) return [];
+        if (!container) return null;
 
         const targets = Array.from(container.querySelectorAll('.nav-target'));
-        return targets.map((el, index) => ({
-            id: el.id || `temp-${index}`,
-            element: el,
-            index: index
-        }));
+        if (targets.length === 0) return null;
+
+        const viewportTop = window.scrollY;
+        const viewportBottom = viewportTop + window.innerHeight;
+
+        if (direction) {
+            /**
+             * Forward/next direction ->
+             * Find the first target whose top edge is below the current viewport center
+             * Using viewport center is more intuitive than top.
+             */
+
+            const viewportCenter = viewportTop + (window.innerHeight / 2);
+            // find() loops through each target from top to bottom.
+            // Returns true for first target whose top edge is below viewport center.
+            // Once found, find() stops looping and returns that target.
+            // If no target matches, find() returns undefined, so we fall back to null.
+            return targets.find(target => {
+                const rect = target.getBoundingClientRect();
+                const absoluteTop = rect.top + window.scrollY;
+                return absoluteTop > viewportCenter; // true = keep this target, false = keep looking
+            }) || null;
+        } else {
+            /**
+             * back/prev direction <-
+             * Find the first target whose top is is above the current viewport TOP
+             * (if you use above viewport center here, then if you are slightly above
+             * a new section, then clicking prev will scroll down to it)
+             */
+
+            // Filter to only targets whose top edge is above the viewport top
+            const candidates = targets.filter(target => {
+                const rect = target.getBoundingClientRect();
+                const absoluteTop = rect.top + window.scrollY;
+                return absoluteTop < viewportTop;
+            });
+
+            // Return the closest target above viewport top (last in array = largest absoluteTop)
+            return candidates.length ? candidates[candidates.length - 1] : null;
+        }
+
+        return null;
     }
 
     /**
-     * Update prev/next button disabled states based on currentTargetIndex
+     * Update intra-page prev/next button disabled states based on existence of targets.
      */
-    function updateNavButtons() {
+    function updateIntraNavButtons() {
         if (!navPrev || !navNext) return;
 
-        const hasPrev = currentTargetIndex > 0;
-        const hasNext = currentTargetIndex < navTargets.length - 1 && currentTargetIndex !== -1;
+        const hasPrev = findNearestNavTarget(false) !== null;
+        const hasNext = findNearestNavTarget(true) !== null;
 
         navPrev.disabled = !hasPrev;
         navNext.disabled = !hasNext;
 
-        // Update ARIA attributes for accessibility
         navPrev.setAttribute('aria-disabled', (!hasPrev).toString());
         navNext.setAttribute('aria-disabled', (!hasNext).toString());
     }
@@ -261,28 +293,20 @@
      * Navigate to previous target (if exists)
      */
     function goToPrevTarget() {
-        if (currentTargetIndex <= 0) return;
-
-        currentTargetIndex--;
-        const target = navTargets[currentTargetIndex];
-        if (target && target.element) {
-            scrollToElement(target.element);
+        const target = findNearestNavTarget(false);
+        if (target) {
+            scrollToElement(target);
         }
-        updateNavButtons();
     }
 
     /**
      * Navigate to next target (if exists)
      */
     function goToNextTarget() {
-        if (currentTargetIndex === -1 || currentTargetIndex >= navTargets.length - 1) return;
-
-        currentTargetIndex++;
-        const target = navTargets[currentTargetIndex];
-        if (target && target.element) {
-            scrollToElement(target.element);
+        const target = findNearestNavTarget(true);
+        if (target) {
+            scrollToElement(target);
         }
-        updateNavButtons();
     }
 
     /**
@@ -383,9 +407,7 @@
             document.documentElement.scrollTop = 0;
 
             // Rebuild navigation targets for the new content
-            navTargets = buildNavTargets();
-            currentTargetIndex = navTargets.length > 0 ? 0 : -1;
-            updateNavButtons();
+            updateIntraNavButtons();
             updateChapterNavButtons();
 
             container.style.opacity = '1';
@@ -547,6 +569,46 @@
             navChapNext.addEventListener('click', () => switchDocument(nextSectionKey));
         }
 
+        /**
+         * Throttled handler for scroll and resize events.
+         * 
+         * Uses requestAnimationFrame to limit updates to once per browser repaint
+         * (typically 60fps), preventing excessive DOM queries during rapid event
+         * firing while ensuring the UI remains responsive to viewport changes.
+         * 
+         * The 'ticking' flag prevents queuing multiple animation frames before the
+         * previous one has executed. This pattern is standard for scroll performance
+         * optimization.
+         * 
+         * When invoked, it schedules updateIntraNavButtons() to run during the next
+         * paint cycle, which re-evaluates which .nav-target elements are nearest the
+         * current viewport center and updates the enabled/disabled state of the
+         * prev/next navigation buttons accordingly.
+         * 
+         * @function onScrollOrResize
+         * @returns {void}
+         * 
+         * @example
+         * window.addEventListener('scroll', onScrollOrResize);
+         * window.addEventListener('resize', onScrollOrResize);
+         */
+        let ticking = false;
+
+        function onScrollOrResize() {
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    updateIntraNavButtons();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }
+
+        // Update intra-page nav button states on scroll
+        window.addEventListener('scroll', onScrollOrResize);
+        // Also update on resize (viewport change could affect what's "next")
+        window.addEventListener('resize', onScrollOrResize);
+
         // Wrap tables after content loads
         wrapTables();
 
@@ -554,9 +616,7 @@
         updatePageToc(currentSectionKey);
 
         // Initialize navigation targets for initial content
-        navTargets = buildNavTargets();
-        currentTargetIndex = navTargets.length > 0 ? 0 : -1;
-        updateNavButtons();
+        updateIntraNavButtons();
         updateChapterNavButtons();
     }
 
