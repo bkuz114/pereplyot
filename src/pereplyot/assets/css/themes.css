@@ -242,3 +242,167 @@
 
     --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.5);
 }
+
+/* =============================================
+   SOLAR BLUE (Blue background / Yellow accent)
+   ============================================= */
+.theme-solarBlue {
+    /* Base colors */
+    --bg-body: #0a2a4a;
+    --bg-surface: #0d3b5e;
+    --bg-surface-secondary: #124a6e;
+    --text-primary: #f0f4f8;
+    --text-secondary: #d4e0ec;
+    --text-muted: #a8c0d8;
+    --border: #1e5a7a;
+    --border-light: #154e6a;
+
+    /* Accent colors */
+    --accent: #ffd166;
+    --accent-hover: #ffdf8c;
+    --warning-bg: #4a3a1a;
+    --warning-border: #ffd166;
+    --warning-text: #ffe8b6;
+    --success-bg: #1a4a3a;
+    --success-border: #5ac8a8;
+    --success-text: #8ad8c0;
+
+    /* Code colors */
+    --code-bg: #124a6e;
+    --code-text: #ffb347;
+    --code-block-bg: #0d3b5e;
+    --code-block-text: #f0f4f8;
+
+    /* Header */
+    --header-bg: rgba(13, 59, 94, 0.95);
+    --header-border: #1e5a7a;
+
+    /* TOC panel */
+    --toc-bg: #0d3b5e;
+    --toc-hover: #124a6e;
+
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* =============================================
+   SOLAR YELLOW (Yellow background / Blue accent)
+   ============================================= */
+.theme-solarYellow {
+    /* Base colors */
+    --bg-body: #fef3c7;
+    --bg-surface: #fff8e7;
+    --bg-surface-secondary: #fff0d4;
+    --text-primary: #2c3e50;
+    --text-secondary: #4a627a;
+    --text-muted: #6b85a0;
+    --border: #e2c896;
+    --border-light: #f0dcb8;
+
+    /* Accent colors */
+    --accent: #1e6f9f;
+    --accent-hover: #2488c4;
+    --warning-bg: #ffe0a3;
+    --warning-border: #d49436;
+    --warning-text: #7a4a1a;
+    --success-bg: #d4ecd4;
+    --success-border: #2e8b57;
+    --success-text: #1a5a38;
+
+    /* Code colors */
+    --code-bg: #fff0d4;
+    --code-text: #c7254e;
+    --code-block-bg: #fff8e7;
+    --code-block-text: #2c3e50;
+
+    /* Header */
+    --header-bg: rgba(255, 248, 231, 0.95);
+    --header-border: #e2c896;
+
+    /* TOC panel */
+    --toc-bg: #fff8e7;
+    --toc-hover: #fff0d4;
+
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* =============================================
+   MIDNIGHT (Very dark blue / Electric blue accent)
+   ============================================= */
+.theme-midnight {
+    /* Base colors */
+    --bg-body: #0a0e1a;
+    --bg-surface: #12172a;
+    --bg-surface-secondary: #1a1f3a;
+    --text-primary: #e8ecf4;
+    --text-secondary: #c8d0e4;
+    --text-muted: #90a0c0;
+    --border: #2a2f4a;
+    --border-light: #202540;
+
+    /* Accent colors */
+    --accent: #00bfff;
+    --accent-hover: #33ccff;
+    --warning-bg: #3a2a1a;
+    --warning-border: #ffaa44;
+    --warning-text: #ffcc88;
+    --success-bg: #1a3d3a;
+    --success-border: #44ddcc;
+    --success-text: #88eedd;
+
+    /* Code colors */
+    --code-bg: #1a1f3a;
+    --code-text: #66ccff;
+    --code-block-bg: #12172a;
+    --code-block-text: #e8ecf4;
+
+    /* Header */
+    --header-bg: rgba(18, 23, 42, 0.95);
+    --header-border: #2a2f4a;
+
+    /* TOC panel */
+    --toc-bg: #12172a;
+    --toc-hover: #1a1f3a;
+
+    --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* =============================================
+   PLUM (Deep purple / Gold accent)
+   ============================================= */
+.theme-plum {
+    /* Base colors */
+    --bg-body: #1a0a2a;
+    --bg-surface: #2d153a;
+    --bg-surface-secondary: #3d1f4a;
+    --text-primary: #f0e6f5;
+    --text-secondary: #e0cce8;
+    --text-muted: #c0a0d0;
+    --border: #4a2a5a;
+    --border-light: #3a1f4a;
+
+    /* Accent colors */
+    --accent: #ffd700;
+    --accent-hover: #ffed4a;
+    --warning-bg: #4a3a1a;
+    --warning-border: #ffcc44;
+    --warning-text: #ffe088;
+    --success-bg: #1a3d2a;
+    --success-border: #88dd88;
+    --success-text: #bbffbb;
+
+    /* Code colors */
+    --code-bg: #3d1f4a;
+    --code-text: #ffaa66;
+    --code-block-bg: #2d153a;
+    --code-block-text: #f0e6f5;
+
+    /* Header */
+    --header-bg: rgba(45, 21, 58, 0.95);
+    --header-border: #4a2a5a;
+
+    /* TOC panel */
+    --toc-bg: #2d153a;
+    --toc-hover: #3d1f4a;
+
+    --card-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}

@@ -64,6 +64,22 @@ const THEMES = {
     void: {
         name: 'Void',
         previewColors: ['#0a0a0a', '#141414', '#a277ff']
+    },
+    solarBlue: {
+        name: 'Solar Blue',
+        previewColors: ['#0a2a4a', '#0d3b5e', '#ffd166']
+    },
+    solarYellow: {
+        name: 'Solar Yellow',
+        previewColors: ['#fef3c7', '#fff8e7', '#1e6f9f']
+    },
+    midnight: {
+        name: 'Midnight',
+        previewColors: ['#0a0e1a', '#12172a', '#00bfff']
+    },
+    plum: {
+        name: 'Plum',
+        previewColors: ['#1a0a2a', '#2d153a', '#ffd700']
     }
 };
 
