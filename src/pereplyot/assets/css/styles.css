@@ -205,7 +205,9 @@ body {
     border-radius: 0.75rem;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     min-width: 180px;
-    overflow: hidden;
+    /* viewport-aware max-height */
+    max-height: min(600px, calc(100vh - 120px));
+    overflow-y: auto;
     transition: all var(--transition-speed) ease;
 }
 
