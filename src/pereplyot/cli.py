@@ -911,6 +911,12 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
 
     raw_text = sequential_replacements(raw_text, replacements)
 
+    # lines with only * or - (e.g. ***, --) convert to <hr>
+    # Notes:
+    # 1. must be surrounded by \n to avoid catching valid inline chars e.g. "Then - he paused"
+    # 2. pad <hr> with \n\n so surrounding text will be interpreted as paragraphs on next split
+    raw_text = re.sub(r'(?<=\n)[*-]+(?=\n)', r'\n\n<hr>\n\n', raw_text)
+
     # Split on double newlines (blank lines) to identify paragraphs
     paragraphs = re.split(r"\n\s*\n", raw_text)
 
