@@ -917,6 +917,14 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
     # 2. pad <hr> with \n\n so surrounding text will be interpreted as paragraphs on next split
     raw_text = re.sub(r"(?<=\n)[*-]+(?=\n)", r"\n\n<hr>\n\n", raw_text)
 
+    # convert following to emdash:
+    # 1. - (with space around)
+    # 2. -- (with space around)
+    # Note: ensure whitespace around on 1., else will convert compound words e.g. "push-ups"
+
+    # {1,2} matches one or two - chars
+    raw_text = re.sub(r"(\s)-{1,2}(\s)", r"\1—\2", raw_text)
+
     # Split on double newlines (blank lines) to identify paragraphs
     paragraphs = re.split(r"\n\s*\n", raw_text)
 
