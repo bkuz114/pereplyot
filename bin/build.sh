@@ -21,7 +21,7 @@ set -e
 PROJECT="pereplyot"
 # project with - chars converted to _ (PyPI normalizes - to _ when building; also needed for import)
 PROJECT_NORMALIZED="${PROJECT//-/_}"
-VERSION="1.1.0"
+VERSION="1.2.0"
 
 # working directories
 

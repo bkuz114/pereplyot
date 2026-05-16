@@ -5,6 +5,22 @@ All notable changes to `pereplyot` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+### Formatting Updates
+  - Convert `-` and `--` to emdash (`—`) in `.txt` and `.rtf` docs (Note: only converts if surrounded by whitespace to avoid converting compound words) (0882eee) 
+  - Convert `...` (three periods) to `…` (horizontal ellipsis char) in `.txt` and `.rtf` docs (8f73c91)
+
+### Fixed
+- Windows `--nuclear` deletion fails with two separate errors:
+  1. `TypeError: make_path_writable() takes 2 positional arguments but 3 were given`
+  2. `NameError: name 'stat' is not defined`
+  - The `onerror` handler for `shutil.rmtree()` now accepts the required `excinfo` parameter
+  - The missing `import stat` statement is now present.
+  - Fixes permission-stripping retry mechanism on Windows when standard `--force` fails with access denied errors
+  - **Note**: These errors ONLY occured when `shutil.rmtree()` encountered an error (and thus the faulty callback is called)
+  - See commit b713441
+
 ## [1.1.0]
 
 - **Support for Parts**
@@ -121,4 +137,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [1.0.0]: https://github.com/bkuz114/pereplyot/releases/tag/v1.0.0
 [1.1.0]: https://github.com/bkuz114/pereplyot/releases/tag/v1.1.0
-
+[1.2.0]: https://github.com/bkuz114/pereplyot/releases/tag/v1.2.0
