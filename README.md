@@ -1,4 +1,4 @@
-# Переплет (bookbinder)
+# Переплет (bookbinding)
 
 [![PyPI version](https://badge.fury.io/py/pereplyot.svg)](https://pypi.org/project/pereplyot/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pereplyot.svg)](https://pypi.org/project/pereplyot/)
