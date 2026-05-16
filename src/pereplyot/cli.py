@@ -925,6 +925,9 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
     # {1,2} matches one or two - chars
     raw_text = re.sub(r"(\s)-{1,2}(\s)", r"\1—\2", raw_text)
 
+    # convert ... to … char
+    raw_text = raw_text.replace("...", "…")
+
     # Split on double newlines (blank lines) to identify paragraphs
     paragraphs = re.split(r"\n\s*\n", raw_text)
 
