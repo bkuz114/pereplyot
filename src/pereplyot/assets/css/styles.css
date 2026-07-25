@@ -925,6 +925,44 @@ hr {
     background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent);
 }
 
+/* Editing classes */
+.editing {
+    color: var(--editing-planned-text);
+    background: var(--editing-planned-bg);
+}
+
+.editing.planned {
+    color: var(--editing-planned-text);
+    background: var(--editing-planned-bg);
+}
+
+.editing.progress {
+    color: var(--editing-progress-text);
+    background: var(--editing-progress-bg);
+}
+
+.editing.complete {
+    color: var(--editing-complete-text);
+    background: var(--editing-complete-bg);
+}
+
+/** block level edits (entire paragraphs): add border */
+.editing.block {
+    padding-left: 0.75rem;
+}
+
+.editing.planned.block {
+    border-left: 2px solid var(--editing-planned-border);
+}
+
+.editing.progress.block {
+    border-left: 4px solid var(--editing-progress-border);
+}
+
+.editing.complete.block {
+    border-left: 2px solid var(--editing-complete-border);
+}
+
 /* --------------------------------------------
    Responsive
    -------------------------------------------- */

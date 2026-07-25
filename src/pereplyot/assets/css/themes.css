@@ -31,6 +31,17 @@
     --code-block-bg: #f1f3f5;
     --code-block-text: #212529;
 
+    /* Editing colors */
+    --editing-planned-bg: #d4dcec;
+    --editing-planned-text: #1a2a4a;
+    --editing-progress-bg: #ffe0b5;
+    --editing-progress-text: #5a3a1a;
+    --editing-complete-bg: #b8d9c8;
+    --editing-complete-text: #1a3a2a;
+    --editing-planned-border: #b0b8c8;
+    --editing-progress-border: #d4a040;
+    --editing-complete-border: #5a8a6a;
+
     /* Header */
     --header-bg: rgba(255, 255, 255, 0.95);
     --header-border: #dee2e6;
@@ -66,6 +77,17 @@
     --code-text: #e6739f;
     --code-block-bg: #252525;
     --code-block-text: #e9ecef;
+
+    /* Editing colors */
+    --editing-planned-bg: #2a3a5a;
+    --editing-planned-text: #c8d8f0;
+    --editing-progress-bg: #6a4a2a;
+    --editing-progress-text: #f0d8b8;
+    --editing-complete-bg: #2a5a4a;
+    --editing-complete-text: #b8f0d8;
+    --editing-planned-border: #4a5a6a;
+    --editing-progress-border: #c89050;
+    --editing-complete-border: #4a8a6a;
 
     /* Header */
     --header-bg: rgba(30, 30, 30, 0.95);
@@ -109,6 +131,17 @@
     --code-block-bg: #3b4252;
     --code-block-text: #eceff4;
 
+    /* Editing colors */
+    --editing-planned-bg: #4a5668;
+    --editing-planned-text: #e5e9f0;
+    --editing-progress-bg: #8a6a3a;
+    --editing-progress-text: #eceff4;
+    --editing-complete-bg: #3a6a5a;
+    --editing-complete-text: #d8e8e0;
+    --editing-planned-border: #5a6678;
+    --editing-progress-border: #b8924a;
+    --editing-complete-border: #4a8a72;
+
     /* Header */
     --header-bg: rgba(59, 66, 82, 0.95);
     --header-border: #4c566a;
@@ -149,6 +182,17 @@
     --code-text: #c57b7b;
     --code-block-bg: #243029;
     --code-block-text: #e8ede9;
+
+    /* Editing colors */
+    --editing-planned-bg: #3a4a44;
+    --editing-planned-text: #d8e8e0;
+    --editing-progress-bg: #6a5a2a;
+    --editing-progress-text: #f0e8d0;
+    --editing-complete-bg: #2a5a44;
+    --editing-complete-text: #c8f0d8;
+    --editing-planned-border: #4a5a54;
+    --editing-progress-border: #8a7a3a;
+    --editing-complete-border: #3a7a5a;
 
     /* Header */
     --header-bg: rgba(36, 48, 41, 0.95);
@@ -191,6 +235,17 @@
     --code-block-bg: #f5edd9;
     --code-block-text: #3b2e1e;
 
+    /* Editing colors */
+    --editing-planned-bg: #d8d0c8;
+    --editing-planned-text: #2a221a;
+    --editing-progress-bg: #e8d4a8;
+    --editing-progress-text: #3a2a14;
+    --editing-complete-bg: #c8d8c0;
+    --editing-complete-text: #1a2a1a;
+    --editing-planned-border: #c0b8a8;
+    --editing-progress-border: #c4a050;
+    --editing-complete-border: #6a8a5a;
+
     /* Header */
     --header-bg: rgba(251, 246, 233, 0.95);
     --header-border: #d4c5a9;
@@ -231,6 +286,17 @@
     --code-text: #ff7eb6;
     --code-block-bg: #0a0a0a;
     --code-block-text: #fafafa;
+
+    /* Editing colors */
+    --editing-planned-bg: #1a2a4a;
+    --editing-planned-text: #d0ddf0;
+    --editing-progress-bg: #6a3a1a;
+    --editing-progress-text: #f0d8b0;
+    --editing-complete-bg: #1a4a3a;
+    --editing-complete-text: #b0f0d8;
+    --editing-planned-border: #3a4a5a;
+    --editing-progress-border: #c88040;
+    --editing-complete-border: #2a7a5a;
 
     /* Header */
     --header-bg: rgba(10, 10, 10, 0.95);
@@ -273,6 +339,17 @@
     --code-block-bg: #0d3b5e;
     --code-block-text: #f0f4f8;
 
+    /* Editing colors */
+    --editing-planned-bg: #1a4a6a;
+    --editing-planned-text: #d0e8f8;
+    --editing-progress-bg: #6a4a1a;
+    --editing-progress-text: #f8e8c8;
+    --editing-complete-bg: #1a5a4a;
+    --editing-complete-text: #c8f8e8;
+    --editing-planned-border: #3a5a7a;
+    --editing-progress-border: #b88a30;
+    --editing-complete-border: #2a8a6a;
+
     /* Header */
     --header-bg: rgba(13, 59, 94, 0.95);
     --header-border: #1e5a7a;
@@ -313,6 +390,17 @@
     --code-text: #c7254e;
     --code-block-bg: #fff8e7;
     --code-block-text: #2c3e50;
+
+    /* Editing colors */
+    --editing-planned-bg: #c8d8e8;
+    --editing-planned-text: #1a2a3a;
+    --editing-progress-bg: #f0d8a0;
+    --editing-progress-text: #3a2a0a;
+    --editing-complete-bg: #c0d8c0;
+    --editing-complete-text: #1a2a1a;
+    --editing-planned-border: #b8c8d8;
+    --editing-progress-border: #c89840;
+    --editing-complete-border: #4a8a5a;
 
     /* Header */
     --header-bg: rgba(255, 248, 231, 0.95);
@@ -355,6 +443,17 @@
     --code-block-bg: #12172a;
     --code-block-text: #e8ecf4;
 
+    /* Editing colors */
+    --editing-planned-bg: #1a2a4a;
+    --editing-planned-text: #c8d8f0;
+    --editing-progress-bg: #5a3a1a;
+    --editing-progress-text: #f0d8b0;
+    --editing-complete-bg: #1a4a4a;
+    --editing-complete-text: #b0f0e8;
+    --editing-planned-border: #3a4a5a;
+    --editing-progress-border: #b07840;
+    --editing-complete-border: #2a7a6a;
+
     /* Header */
     --header-bg: rgba(18, 23, 42, 0.95);
     --header-border: #2a2f4a;
@@ -395,6 +494,17 @@
     --code-text: #ffaa66;
     --code-block-bg: #2d153a;
     --code-block-text: #f0e6f5;
+
+    /* Editing colors */
+    --editing-planned-bg: #3a2a5a;
+    --editing-planned-text: #e0d0f0;
+    --editing-progress-bg: #6a4a1a;
+    --editing-progress-text: #f0e0b0;
+    --editing-complete-bg: #2a4a3a;
+    --editing-complete-text: #c8f0d8;
+    --editing-planned-border: #4a3a5a;
+    --editing-progress-border: #b08a30;
+    --editing-complete-border: #3a7a5a;
 
     /* Header */
     --header-bg: rgba(45, 21, 58, 0.95);
