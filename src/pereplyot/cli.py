@@ -1035,7 +1035,7 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     - certain chars do not render (emdash, etc.)
 
     Args:
-        filepath: Path to .docx file
+        filepath: Path to .rtf file
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
@@ -1044,7 +1044,7 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
         HTML string
     """
     if not filepath.exists():
-        raise Exception(f".docx file {filepath} does not exist!")
+        raise Exception(f".rtf file {filepath} does not exist!")
     if not filepath.suffix.lower() == ".rtf":
         raise Exception(f"File is not .rtf! {filepath}")
 
