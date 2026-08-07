@@ -732,7 +732,14 @@ def write_html_file(content: str, output: Path, force: bool) -> Path:
     # convert to BeautifulSoup and prettify
     soup = BeautifulSoup(content, "html.parser")
     beautiful_soup_utils.write_soup_to_file(
-        soup, output, True, True, True, [], [], False
+        soup,
+        output,
+        force=True,
+        preserve_ru=True,
+        preserve_nbsp=True,
+        taglist=[],
+        taglist_outer=[],
+        log=False,
     )
     logger.info(f"✅ Generated: {output}")
 
