@@ -883,7 +883,7 @@ def convert_markdown_to_html(filepath: str) -> str:
     return raw_html
 
 
-def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
+def convert_raw_text_to_html(raw_text: str, indent: int = 0, em: bool = True) -> str:
     """
     Convert raw text string to HTML with paragraph preservation and exact leading whitespace.
 
@@ -894,13 +894,15 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
         - Leading spaces/tabs on lines are preserved visually
           by converting each space to &nbsp; and each tab to 4 &nbsp;.
         - If the first line has no leading whitespace, no &nbsp; prefix is added.
-        - cyrillic style << >>, « » converted to <em> </em> tags
+        - (if em): cyrillic style << >>, « » converted to <em> </em> tags
 
     Args:
         raw_text: string to convert to HTML
         indent: int to control indentation of new lines in raw text.
             If > 0, all lines will be indented that many spaces.
             NOTE: Overrides any leading spaces currently present.
+        em: bool. Converts << / >>, « / » to emphasized text by replacing
+            with <em> tags.
 
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
@@ -912,10 +914,11 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
     # Normalize Windows line endings to Unix-style
     replacements.append(["\r\n", "\n"])
 
-    # convert << >>, « » to <em> </em>
-    replacements.extend(
-        [["<<", "<em>"], [">>", "</em>"], ["«", "<em>"], ["»", "</em>"]]
-    )
+    if em:
+        # convert << >>, « » to <em> </em>
+        replacements.extend(
+            [["<<", "<em>"], [">>", "</em>"], ["«", "<em>"], ["»", "</em>"]]
+        )
 
     raw_text = sequential_replacements(raw_text, replacements)
 
@@ -983,7 +986,7 @@ def convert_raw_text_to_html(raw_text: str, indent: int = 0) -> str:
     return "\n".join(html_parts)
 
 
-def convert_txt_to_html(filepath: Path, indent: int) -> str:
+def convert_txt_to_html(filepath: Path, indent: int, em: bool) -> str:
     """
     Convert .txt file to HTML.
     (see docstring of convert_raw_text_to_html for formatting specifics)
@@ -993,6 +996,8 @@ def convert_txt_to_html(filepath: Path, indent: int) -> str:
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » to emphasized text by replacing
+            with <em> tags.
 
     Returns:
         HTML string with paragraphs, line breaks, and preserved leading indentation.
@@ -1006,7 +1011,7 @@ def convert_txt_to_html(filepath: Path, indent: int) -> str:
         raise Exception(f"File is not .txt! {filepath}")
 
     raw_text = read_file(filepath)
-    return convert_raw_text_to_html(raw_text, indent)
+    return convert_raw_text_to_html(raw_text, indent, em)
 
 
 def convert_docx_to_html(filepath: Path) -> str:
@@ -1031,7 +1036,7 @@ def convert_docx_to_html(filepath: Path) -> str:
     return result.value
 
 
-def convert_rtf_to_html(filepath: Path, indent: int) -> str:
+def convert_rtf_to_html(filepath: Path, indent: int, em: bool) -> str:
     """
     Convert Microsoft .rtf file to HTML. Experimental -- use at own risk.
 
@@ -1046,6 +1051,8 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » to emphasized text by replacing
+            with <em> tags.
 
     Returns:
         HTML string
@@ -1062,7 +1069,7 @@ def convert_rtf_to_html(filepath: Path, indent: int) -> str:
     rtf_bytes = rtf_bytes.decode("ascii", errors="ignore")
     text_string = rtf_to_text(rtf_bytes)
 
-    return convert_raw_text_to_html(text_string, indent)
+    return convert_raw_text_to_html(text_string, indent, em)
 
 
 def post_process_file_html(html: str) -> str:
@@ -1286,7 +1293,9 @@ const SECTION_CONTENT = {content_json};
 # ============================================================================
 
 
-def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, int]:
+def process_chapter(
+    chapter: Chapter, strict: bool, indent: int, em: bool
+) -> Tuple[str, int]:
     """
     Generates HTML content for a single Chapter (which can be
     comprised of multiple FileRef objects)
@@ -1299,6 +1308,8 @@ def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, i
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » in .txt, .rtf to emphasized text
+            in final rendered HTML by replacing with <em> tags.
 
     Returns
         Tuple of [str, int]: HTML content + number of failed files
@@ -1314,11 +1325,11 @@ def process_chapter(chapter: Chapter, strict: bool, indent: int) -> Tuple[str, i
             filepath = fileRef.path
             file_ext = filepath.suffix.lower()
             if file_ext == ".txt":
-                file_html = convert_txt_to_html(filepath, indent)
+                file_html = convert_txt_to_html(filepath, indent, em)
             elif file_ext == ".docx":
                 file_html = convert_docx_to_html(filepath)
             elif file_ext == ".rtf":
-                file_html = convert_rtf_to_html(filepath, indent)
+                file_html = convert_rtf_to_html(filepath, indent, em)
             elif file_ext == ".markdown" or file_ext == ".md":
                 file_html = convert_markdown_to_html(filepath)
             file_html = post_process_file_html(file_html)
@@ -1341,6 +1352,7 @@ def process_chapters(
     chapters: List[Chapter],
     strict: bool,
     indent: int,
+    em: bool,
     prev_chapter_id: str | None,
     next_chapter_id: str | None,
 ) -> Tuple[Dict[str, Dict[str, str]], int]:
@@ -1361,6 +1373,8 @@ def process_chapters(
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » in .txt, .rtf to emphasized text
+            in final rendered HTML by replacing with <em> tags.
         prev_chapter_id: ID of the chapter immediately preceding the first
             chapter in this list. Used to weave chapter sequences across
             Parts in hierarchical documents. Pass None if this is the first
@@ -1384,7 +1398,7 @@ def process_chapters(
     failed_count = 0
 
     for i, chapter in enumerate(chapters):
-        chapter_html, failed_files = process_chapter(chapter, strict, indent)
+        chapter_html, failed_files = process_chapter(chapter, strict, indent, em)
         failed_count += failed_files
         # post-process (Add title, etc)
         chapter_name = f"Chapter: {chapter.name}"
@@ -1434,7 +1448,7 @@ def process_chapters(
     return html, failed_count
 
 
-def process_files(doc: Document, strict: bool, indent: int) -> Dict[str, str]:
+def process_files(doc: Document, strict: bool, indent: int, em: bool) -> Dict[str, str]:
     """
     Returns a dictionary mapping unique chapter ids to the HTML content
     created for that chapter (made up of its individual files, converted
@@ -1447,6 +1461,8 @@ def process_files(doc: Document, strict: bool, indent: int) -> Dict[str, str]:
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » in .txt, .rtf to emphasized text
+            in final rendered HTML by replacing with <em> tags.
 
     Returns:
         a dictionary of {unique_ID : HTML_content} pairs (one for each "chapter"), where:
@@ -1482,6 +1498,7 @@ def process_files(doc: Document, strict: bool, indent: int) -> Dict[str, str]:
                 part.chapters,
                 strict,
                 indent,
+                em,
                 prev_part_last_chap_id,
                 next_part_first_chap_id,
             )
@@ -1500,7 +1517,7 @@ def process_files(doc: Document, strict: bool, indent: int) -> Dict[str, str]:
     if doc.chapters:
         # only html_dict and total_failed are needed
         html_dict, total_failed = process_chapters(
-            doc.chapters, strict, indent, None, None
+            doc.chapters, strict, indent, em, None, None
         )
         # save id of first chapter
         first_id = doc.chapters[0].id
@@ -1530,6 +1547,7 @@ def generate_binder(
     home_style: str,
     hide_navigation: bool,
     indent: int,
+    em: bool,
 ) -> Path:
     """
     Creates HTML site from list of files in JSON inputfile.
@@ -1552,6 +1570,8 @@ def generate_binder(
         indent: int. Indents new lines in .txt, .rtf by this many spaces
             in final rendered HTML (overrides existing leading spaces to
             make document indentation uniform).
+        em: bool. Converts << / >>, « / » in .txt, .rtf to emphasized text
+            in final rendered HTML by replacing with <em> tags.
 
     Returns:
         Path to generated file
@@ -1581,7 +1601,7 @@ def generate_binder(
     #
     # Note: process_files modifies doc to add the id for created chapter div
     # to each Chapter obj, which is how TOC gets constructed.
-    content_dict = process_files(doc, strict, indent)
+    content_dict = process_files(doc, strict, indent, em)
 
     # create TOC
     toc = create_toc(doc)
@@ -1730,6 +1750,12 @@ def main():
         default=0,
         help="Indent all new lines in .txt, .rtf files by this many spaces (Note: overrides existing leading whitespace to make indentation uniform throughout binder.)",
     )
+    parser.add_argument(
+        "--em",
+        required=False,
+        action="store_true",
+        help="Convert << >>, « » to emphasized text",
+    )
     parser.add_argument("--version", "-v", action="version", version=f"{__version__}")
     args = parser.parse_args()
 
@@ -1783,6 +1809,7 @@ def main():
         args.home,
         args.no_navigation,
         args.indent,
+        args.em,
     )
 
     # optionally open in browser
