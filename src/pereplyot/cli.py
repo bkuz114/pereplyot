@@ -736,7 +736,7 @@ def write_html_file(content: str, output: Path, force: bool) -> Path:
         output,
         force=True,
         preserve_ru=True,
-        preserve_nbsp=True,
+        preserve_html_entities=True,
         taglist=[],
         taglist_outer=[],
         log=False,

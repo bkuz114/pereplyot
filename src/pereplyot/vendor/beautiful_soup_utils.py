@@ -11,7 +11,7 @@ import bs4  # needed to typecheck objects i.e. bs4.element.Tag
 from bs4.dammit import EntitySubstitution  # for custom formatter for prettify
 from bs4 import BeautifulSoup, Comment
 
-ENC = 'utf-8-sig'
+ENC = "utf-8-sig"
 
 FILENAME = os.path.basename(__file__)
 # common str to prefix to HTML comments being added by this lib
@@ -67,8 +67,9 @@ def write_file(content: str, filepath: Path, force: bool = False) -> None:
         f.write(content)
 
 
-def encapsulate_tag_text(soup, tag_search, tag_search_attrs, tag_add,
-                         tag_add_attrs, use_nbsp=False):
+def encapsulate_tag_text(
+    soup, tag_search, tag_search_attrs, tag_add, tag_add_attrs, use_nbsp=False
+):
     """
     Encapsulate plain strings within a tag within another tag.
 
@@ -119,9 +120,9 @@ def encapsulate_tag_text(soup, tag_search, tag_search_attrs, tag_add,
                 if use_nbsp:
                     plain_str = child.string
                     if plain_str.endswith(" "):
-                        plain_str = plain_str[:-1] + '\xa0'  # \x0 is &nbsp;
+                        plain_str = plain_str[:-1] + "\xa0"  # \x0 is &nbsp;
                     if plain_str.startswith(" "):
-                        plain_str = '\xa0' + plain_str[1:]
+                        plain_str = "\xa0" + plain_str[1:]
                     child.string.replace_with(plain_str)
 
 
@@ -223,28 +224,28 @@ def add_classes(tag, class_list):
     :returns: None (Permenantly modifies tag)
     """
 
-    if 'class' in tag.attrs:
-        '''
+    if "class" in tag.attrs:
+        """
         BeautifulSoup tag's 'class' attr
         can be str or list
-        '''
-        curr_classes = tag['class']
+        """
+        curr_classes = tag["class"]
         if isinstance(curr_classes, str):
             # dont add dupes
             for new_class in class_list:
                 if new_class not in curr_classes:
-                    tag['class'] += " " + new_class
+                    tag["class"] += " " + new_class
         elif isinstance(curr_classes, list):
             # don't add dupes
             final_list = curr_classes
             final_list.extend(x for x in class_list if x not in final_list)
-            tag['class'] = final_list
+            tag["class"] = final_list
         else:
             # use beautifulsoup4==4.11.1 if you use v 4.13.3 will hit this
             # because the types are different
             raise Exception("Can't identify type of tag's 'class' attr")
     else:
-        tag['class'] = class_list
+        tag["class"] = class_list
 
 
 def get_classes(tag):
@@ -255,20 +256,22 @@ def get_classes(tag):
     :return: the list of css classes in tag (strings)
     """
     classes = []
-    if 'class' in tag.attrs:
-        '''
+    if "class" in tag.attrs:
+        """
         BeautifulSoup tag's 'class' attr
         could be either String or list
-        '''
-        curr_classes = tag['class']
+        """
+        curr_classes = tag["class"]
         if isinstance(curr_classes, str):
             # split existing class string to get a list
             classes = curr_classes.split(" ")
         elif isinstance(curr_classes, list):
             classes = curr_classes
         else:
-            raise Exception("BeautifulSoupUtils: get_classes - class atr"
-                            " is neither String nor list; can't parse it!")
+            raise Exception(
+                "BeautifulSoupUtils: get_classes - class atr"
+                " is neither String nor list; can't parse it!"
+            )
     return classes
 
 
@@ -284,25 +287,27 @@ def remove_classes(tag, class_list):
     """
 
     new_class_list = []
-    if 'class' in tag.attrs:
-        '''
+    if "class" in tag.attrs:
+        """
         BeautifulSoup tag's 'class' attr
         could be either String or list
-        '''
-        curr_classes = tag['class']
+        """
+        curr_classes = tag["class"]
         if isinstance(curr_classes, str):
             # split existing class string to get a list
             curr_classes_list = curr_classes.split(" ")
         elif isinstance(curr_classes, list):
             curr_classes_list = curr_classes
         else:
-            raise Exception("BeautifulSoupUtils: remove_classes - class attr "
-                            "is neither String nor list; can't parse it!")
+            raise Exception(
+                "BeautifulSoupUtils: remove_classes - class attr "
+                "is neither String nor list; can't parse it!"
+            )
 
         for myclass in curr_classes_list:
             if myclass not in class_list:
                 new_class_list.append(myclass)
-            tag['class'] = new_class_list
+            tag["class"] = new_class_list
 
 
 def find_replace_str(soup, string, content, allow_empty=False):
@@ -337,7 +342,7 @@ def find_replace_str(soup, string, content, allow_empty=False):
     """
 
     found = soup.find(string=re.compile(string))
-    '''
+    """
     soup.find with string arg will return a NavigableString
     for the ENTIRE string of the tag that contains the string
     (i.e. suppose you have <h1>%TITLE% %NUMBER%</h1>
@@ -354,11 +359,11 @@ def find_replace_str(soup, string, content, allow_empty=False):
        with 2.
     4. convert result of 3. to BeautifulSoup
     5. Finally, do the replace_with with 4.
-    '''
+    """
     if found:
         found_string = str(copy.copy(found))
         found_replaced = found_string.replace(string, str(content))
-        found_replaced = BeautifulSoup(found_replaced, 'html.parser')
+        found_replaced = BeautifulSoup(found_replaced, "html.parser")
         found.replace_with(found_replaced)
         return True
     else:
@@ -392,8 +397,7 @@ def js_tag(path):
     :return: BeautifulSoup4 object of <script> tag
     """
     # note: <script> tag can not be self-closed like <link> tags
-    return BeautifulSoup('<script src="' + path + '"></script>',
-                         "html.parser")
+    return BeautifulSoup('<script src="' + path + '"></script>', "html.parser")
 
 
 def css_tag(path):
@@ -404,9 +408,12 @@ def css_tag(path):
     :param str path: path to put in the <link> tag
     :return: BeautifulSoup4 object of <link> tag
     """
-    return BeautifulSoup('<link rel="stylesheet" href="' + path
-                         + '" rel="stylesheet" type="text/css" />',
-                         "html.parser")
+    return BeautifulSoup(
+        '<link rel="stylesheet" href="'
+        + path
+        + '" rel="stylesheet" type="text/css" />',
+        "html.parser",
+    )
 
 
 def add_js_tags(soup, paths, add_to_head=True):
@@ -444,8 +451,7 @@ def get_css_head_tags(soup):
     :returns: list<bs4.element.Tag> list of link tags
     """
     if not soup.head:
-        raise Exception(
-                "No <head> tag in soup (can't look for <link> tags)")
+        raise Exception("No <head> tag in soup (can't look for <link> tags)")
     link_tags = soup.head.find_all("link")
     return link_tags
 
@@ -471,7 +477,7 @@ def add_css_head_tags(soup, paths, startAt=None):
     """
 
     # make list of tags from list of paths
-    new_paths = BeautifulSoup("", 'html.parser')
+    new_paths = BeautifulSoup("", "html.parser")
     for path in paths:
         link_tag = css_tag(path)
         comment = Comment(LINK_COMMENT)
@@ -488,20 +494,26 @@ def add_css_head_tags(soup, paths, startAt=None):
     else:
         # default is insert after last <link> tag;
         # but if startAt arg given, insert after that point
-        if startAt is not None:  # 0 is valid so don't do if startAt or it won't catch if it's 0
+        if (
+            startAt is not None
+        ):  # 0 is valid so don't do if startAt or it won't catch if it's 0
             if not 0 <= startAt <= len(link_tags):
-                raise Exception("\nadd_css_head_tags: specified to start "
-                                "adding your new tags at pos {} of existing "
-                                "<link> tags, but there are only {} <link> "
-                                "tags in this soup's <head>. You must specify "
-                                "a number between 0 and {} (inclusive). (p.s. "
-                                "if you give {}, that would insert them at the"
-                                " end of the list of existing <link> tags, but"
-                                " this is the default behavior without the "
-                                "startAt args)"
-                                .format(str(startAt), str(len(link_tags)),
-                                        str(len(link_tags)),
-                                        str(len(link_tags))))
+                raise Exception(
+                    "\nadd_css_head_tags: specified to start "
+                    "adding your new tags at pos {} of existing "
+                    "<link> tags, but there are only {} <link> "
+                    "tags in this soup's <head>. You must specify "
+                    "a number between 0 and {} (inclusive). (p.s. "
+                    "if you give {}, that would insert them at the"
+                    " end of the list of existing <link> tags, but"
+                    " this is the default behavior without the "
+                    "startAt args)".format(
+                        str(startAt),
+                        str(len(link_tags)),
+                        str(len(link_tags)),
+                        str(len(link_tags)),
+                    )
+                )
             if startAt == len(link_tags):  # add after last <link>
                 link_tags[-1].insert_after(new_paths)
             else:  # anything else, start at that position.
@@ -516,8 +528,7 @@ def add_css_head_tags(soup, paths, startAt=None):
                 #   - comment for link_tag[1]
                 #   - new tags
                 #   - link_tag[1]
-                furthest_comment = get_furthest_prev_comment_sibling(
-                        link_tags[startAt])
+                furthest_comment = get_furthest_prev_comment_sibling(link_tags[startAt])
                 if not furthest_comment:  # no comments preceeding <link>
                     link_tags[startAt].insert_before(new_paths)
                 else:  # insert before the comments preceeding <link>
@@ -556,12 +567,13 @@ def update_path(tag, rel):
         updates tag to: <a href="../../index.html">
     """
     if tag.has_attr("src"):
-        updated_path = modify_path(tag['src'], rel)
-        tag['src'] = updated_path
-    elif tag.has_attr("href") and not (tag['href'].startswith("http") or
-                                       tag['href'].startswith("#")):
-        updated_path = modify_path(tag['href'], rel)
-        tag['href'] = updated_path
+        updated_path = modify_path(tag["src"], rel)
+        tag["src"] = updated_path
+    elif tag.has_attr("href") and not (
+        tag["href"].startswith("http") or tag["href"].startswith("#")
+    ):
+        updated_path = modify_path(tag["href"], rel)
+        tag["href"] = updated_path
 
 
 def update_paths(soup, rel):
@@ -609,12 +621,13 @@ def update_path_unix(tag):
     :return None: modifies tag permenantly
     """
     if tag.has_attr("src"):
-        updated_path = unix_filepath(tag['src'])
-        tag['src'] = updated_path
-    elif tag.has_attr("href") and not (tag['href'].startswith("http") or
-                                       tag['href'].startswith("#")):
-        updated_path = unix_filepath(tag['href'])
-        tag['href'] = updated_path
+        updated_path = unix_filepath(tag["src"])
+        tag["src"] = updated_path
+    elif tag.has_attr("href") and not (
+        tag["href"].startswith("http") or tag["href"].startswith("#")
+    ):
+        updated_path = unix_filepath(tag["href"])
+        tag["href"] = updated_path
 
 
 def update_paths_unix(soup):
@@ -653,7 +666,7 @@ def make_soup(html_str):
     :param str html_str: string of (hopefully) valid HTML
     :return: BeautifulSoup4 object for the string
     """
-    soup = BeautifulSoup(html_str.encode(ENC), 'html.parser')
+    soup = BeautifulSoup(html_str.encode(ENC), "html.parser")
     return soup
 
 
@@ -666,19 +679,86 @@ def make_soup_from_file(filepath, log=True):
     :return: BeautifulSoup4 object for data in the file
     """
     if log:
-        print("\t\tbeautiful_soup_utils: Generate soup "
-              "from file \n\t\t\t{}".format(filepath))
+        print(
+            "\t\tbeautiful_soup_utils: Generate soup "
+            "from file \n\t\t\t{}".format(filepath)
+        )
     if not os.path.abspath(filepath):
         raise Exception(
-            ("ERROR (beautiful_soup_utils) filepath to get soup from is not "
-             "absolute {}").format(filepath))
+            (
+                "ERROR (beautiful_soup_utils) filepath to get soup from is not "
+                "absolute {}"
+            ).format(filepath)
+        )
     if not os.path.exists(filepath):
         raise Exception(
-            ("ERROR (beautiful_soup_utils) filepath to get soup from does "
-             "not exist {}").format(filepath))
+            (
+                "ERROR (beautiful_soup_utils) filepath to get soup from does "
+                "not exist {}"
+            ).format(filepath)
+        )
     file_str = read_file(Path(filepath))
     soup = make_soup(file_str)
     return soup
+
+
+def restore_html_entities(string, fix_yelochki=False):
+    """
+    Custom formatter for BeautifulSoup prettify().
+
+    When passed as formatter=restore_html_entities to prettify(),
+    every string and attribute value in the parse tree will be
+    passed to this function, and prettify will output whatever
+    value it returns.
+
+    Necessary because none of BeautifulSoup's built-in formatter
+    options handle both Cyrillic characters and HTML entities
+    correctly:
+        - formatter='html' or 'html5': preserves &nbsp; but mangles
+          Cyrillic (e.g. replaces them with numeric entities like
+          &#1084;)
+        - formatter='minimal' or None: preserves Cyrillic but
+          strips &nbsp; and other HTML entities
+
+    Since no built-in formatter does both, this custom formatter
+    re-escapes the characters that BeautifulSoup decoded during
+    parsing (&nbsp; → \\xa0, &lt; → <, etc.) back to their entity
+    forms, while leaving Cyrillic and other Unicode characters
+    untouched.
+
+    Uses BeautifulSoup's own EntitySubstitution.substitute_html()
+    to perform the conversion. The set of characters to restore
+    is defined in _ENTITIES_TO_RESTORE.
+    """
+    # Characters that BeautifulSoup decodes during parsing and must be
+    # re-escaped to their HTML entity forms before writing to disk.
+    # Each entry is the decoded character that EntitySubstitution will
+    # convert back to its entity form.
+    # Source: bs4.dammit.EntitySubstitution.substitute_html
+    #
+    # IMPORTANT: & must be restored FIRST. If it runs after the others,
+    # it will convert the & in &lt;, &gt;, &nbsp;, etc. into &amp;lt;,
+    # &amp;gt;, &amp;nbsp; — double-encoding and breaking the output.
+    #
+    # Uses BeautifulSoup's EntitySubstitution.substitute_html() to
+    # perform the conversion.
+    _ENTITIES_TO_RESTORE = [
+        "&",  # &amp;   — must be first; prevents double-encoding of entities below
+        "\xa0",  # &nbsp;  — non-breaking space; without it custom spacing collapses
+        "<",  # &lt;    — less-than; the browser will misparse <<text>> as HTML tags
+        ">",  # &gt;    — greater-than; same as above
+        '"',  # &quot;  — double quote; prevents premature termination of attribute values
+        "'",  # &apos;  — single quote; same as above
+    ]
+
+    # fix guillemets first; will be no << or >> to replace after entity restoration
+    if fix_yelochki:
+        string = string.replace("<<", "«").replace(">>", "»")
+
+    for char in _ENTITIES_TO_RESTORE:
+        string = string.replace(char, EntitySubstitution.substitute_html(char))
+
+    return string
 
 
 def preserve_nbsp_and_ru(string):
@@ -713,7 +793,7 @@ def preserve_nbsp_and_ru(string):
     # split on nbsp
     # (&nbsp are parsed in BS as \xa0)
     # (https://stackoverflow.com/questions/66895175/beautifulsoup-find-tag-with-text-containing-nbsp)
-    split_str = string.split('\xa0')
+    split_str = string.split("\xa0")
     # (this will split a&nbsp;b&nsbp;&c --> [a,b,c])
     for i, space_between in enumerate(split_str):
         # space_between will be regular text
@@ -723,18 +803,28 @@ def preserve_nbsp_and_ru(string):
         if i < len(split_str) - 1:
             # put the nbsp through the EntitySubstitution function
             # which will preserve it
-            newstr += EntitySubstitution.substitute_html('\xa0')
+            newstr += EntitySubstitution.substitute_html("\xa0")
     return newstr
 
 
-def prettify_soup(soup, preserve_ru=True, preserve_nbsp=True, taglist=[],
-                  taglist_outer=[], remove_trailing_backslash=False):
+def prettify_soup(
+    soup,
+    preserve_ru=True,
+    preserve_html_entities=True,
+    fix_yelochki=False,
+    taglist=[],
+    taglist_outer=[],
+    remove_trailing_backslash=False,
+):
     """
     prettify a BeautifulSoup4 object
 
     :param BeautifulSoup4 soup: BeautifulSoup object to prettify
     :param boolean preserve_ru: preserve Cyrillic when prettifying
-    :param boolean preserve_bnsp: preserve &nbsp; chars
+    :param boolean preserve_html_entities: optional preserve
+        HTML entities (&nbsp;, &gt;, etc.) while prettifying.
+    :param boolean fix_yelochki: convert <<, >> to «, »
+        while prettifying
     :param list[str] taglist: optional. list of HTML tags to
         collapse whitespace chars inside. i.e. ["em", "h1", "span"]
     :param list[str] taglist_outer: optional list of tags to
@@ -743,11 +833,28 @@ def prettify_soup(soup, preserve_ru=True, preserve_nbsp=True, taglist=[],
         trailing /> on void tags (a w3 validation warning)
     :return: prettified STRING for soup
     """
-    formatter = 'minimal'  # default formatter for prettify: preserves cyrillic but removes &nbsp;
-    if preserve_ru and preserve_nbsp:
-        formatter = preserve_nbsp_and_ru  # cust func that preserves both
-    elif preserve_nbsp:
-        formatter = 'html5'  # preserves &nbsp; but mangles Cyrillic; no trailing / on void tags like <br>
+    if fix_yelochki and not (preserve_ru and preserve_html_entities):
+        raise ValueError(
+            "prettify_soup: fix_yelochki requires both preserve_ru=True and "
+            "preserve_html_entities=True, because guillemet conversion "
+            "is performed by the custom formatter (restore_html_entities), "
+            "which is only used when both options are enabled.\n"
+            "\n"
+            "If you need guillemet conversion with a different formatter "
+            "(e.g. 'html5' or 'minimal'), pre-process your content before "
+            "passing it to BeautifulSoup by replacing << and >> with « and » "
+            "in the raw HTML string."
+        )
+
+    formatter = "minimal"  # default formatter for prettify: preserves cyrillic but removes &nbsp;
+    if preserve_ru and preserve_html_entities:
+        # prettify(formatter=...) expects a callable taking exactly one
+        # argument (the string). Use a lambda to pass fix_yelochki
+        # through to restore_html_entities, since the formatter API
+        # doesn't support extra arguments.
+        formatter = lambda s: restore_html_entities(s, fix_yelochki=fix_yelochki)
+    elif preserve_html_entities:
+        formatter = "html5"  # preserves &nbsp; but mangles Cyrillic; no trailing / on void tags like <br>
 
     soup_str = soup.prettify(formatter=formatter)
     for tag in taglist:
@@ -768,12 +875,25 @@ def fix_void_tags(html):
     Note: do NOT remove all /> - that's valid to close non-void tags,
     and can mangle your HTML (e.g. <path> as subset of <svg>)
     """
-    void_tags = ["area", "base", "br", "col", "embed",
-                 "hr", "img", "input", "link", "meta",
-                 "param", "source", "track", "wbr"]
+    void_tags = [
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    ]
     for tag in void_tags:
-        closing_slash_reg = re.compile(f'<{tag}(.*)/>')
-        html = closing_slash_reg.sub(f'<{tag}\\1>', html)
+        closing_slash_reg = re.compile(f"<{tag}(.*)/>")
+        html = closing_slash_reg.sub(f"<{tag}\\1>", html)
     return html
 
 
@@ -801,13 +921,13 @@ def collapse_tags_outer(html, tag):
     # remove space chars BEFORE opening tag
     # (be mindful of attrs, i.e. <tag class="..")
     # https://stackoverflow.com/questions/6711567/how-to-use-python-regex-to-replace-using-captured-group
-    reg_tag = re.compile(f'\\s*<{tag}([^>]*)>\\s*')
-    html = reg_tag.sub(f'<{tag}\\1>', html)
+    reg_tag = re.compile(f"\\s*<{tag}([^>]*)>\\s*")
+    html = reg_tag.sub(f"<{tag}\\1>", html)
     # replace spaces AFTER closing tag
     # https://stackoverflow.com/questions/55962146/remove-line-breaks-and-spaces-around-span-elements-with-python-regex
     # (note: that SO answer didn't entirely work; maybe because of the +
     # it was ignoring </span> tags that only had a newline around one side)
-    html = re.sub(f'</{tag}>\\s*', f'</{tag}>', html)
+    html = re.sub(f"</{tag}>\\s*", f"</{tag}>", html)
     return html
 
 
@@ -826,10 +946,12 @@ def collapse_tags_inner(html, tag):
     # remove spaces AFTER opening tag
     # (be mindful of attrs, i.e. <tag class="..")
     # https://stackoverflow.com/questions/6711567/how-to-use-python-regex-to-replace-using-captured-group
-    reg_open = re.compile(f'<{tag}([^>]*)>\\s*')  # ([^>]*) captures 0 or more of everything BUT ">" char
-    html = reg_open.sub(f'<{tag}\\1>', html)
+    reg_open = re.compile(
+        f"<{tag}([^>]*)>\\s*"
+    )  # ([^>]*) captures 0 or more of everything BUT ">" char
+    html = reg_open.sub(f"<{tag}\\1>", html)
     # replace spaces BEFORE closing tag.
-    html = re.sub(f'\\s*</{tag}>', f'</{tag}>', html)
+    html = re.sub(f"\\s*</{tag}>", f"</{tag}>", html)
     return html
 
 
@@ -849,10 +971,20 @@ def remove_html_comments(soup, preserve_internal):
         comment.extract()
 
 
-def write_soup_to_file(soup, output_filename, force, preserve_ru=False,
-                       preserve_nbsp=True, taglist=[], taglist_outer=[],
-                       log=True, remove_trailing_backslash=False,
-                       remove_comments=False, preserve_internal=False):
+def write_soup_to_file(
+    soup,
+    output_filename,
+    force,
+    preserve_ru=False,
+    preserve_html_entities=True,
+    fix_yelochki=False,
+    taglist=[],
+    taglist_outer=[],
+    log=True,
+    remove_trailing_backslash=False,
+    remove_comments=False,
+    preserve_internal=False,
+):
     """
     write a BeautifulSoup object to a file (prettified)
 
@@ -862,8 +994,10 @@ def write_soup_to_file(soup, output_filename, force, preserve_ru=False,
     :param boolean force: Overwrite if files exists
     :param boolean preserve_ru: optional. preserve Cyrillic
         while prettifying
-    :param boolean preserve_nbsp: optional preserve &nbsp;
-        chars while prettifying
+    :param boolean preserve_html_entities: optional preserve
+        HTML entities (&nbsp;, &gt;, etc.) while prettifying.
+    :param boolean fix_yelochki: convert <<, >> to «, »
+        while prettifying
     :param list[str] taglist: optional list of tags to
         collapse whitespace chars inside of during prettify
         i.e. ["h1", "span", "em"]
@@ -882,11 +1016,19 @@ def write_soup_to_file(soup, output_filename, force, preserve_ru=False,
     :return: None
     """
     if log:
-        print("\t\tbeautiful_soup_utils: Prettify soup "
-              "and write to\n\t\t\t{}".format(output_filename))
+        print(
+            "\t\tbeautiful_soup_utils: Prettify soup "
+            "and write to\n\t\t\t{}".format(output_filename)
+        )
     if remove_comments:
         remove_html_comments(soup, preserve_internal)
-    pretty_soup = prettify_soup(soup, preserve_ru, preserve_nbsp,
-                                taglist, taglist_outer,
-                                remove_trailing_backslash)
+    pretty_soup = prettify_soup(
+        soup,
+        preserve_ru,
+        preserve_html_entities,
+        fix_yelochki,
+        taglist,
+        taglist_outer,
+        remove_trailing_backslash,
+    )
     write_file(pretty_soup, Path(output_filename), force)

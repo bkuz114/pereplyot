@@ -30,12 +30,13 @@
 - Reason: parsing JSON inputfiles
 
 ## beautiful_soup_utils.py (https://github.com/bkuz114/libs)
-- https://github.com/bkuz114/libs/commit/04b9135e1824ef74a320e4268b6511788b799ffa
+- https://github.com/bkuz114/libs/commit/41cefa8bd016ee41bd965b0cc805d097df8b6a06
 - Original license: None
 - Files vendored:
   - beautiful_soup_utils.py → beautiful_soup_utils.py
 - Modifications: None (vendored as-is)
-- Reason: prettifying beautiful soup while still preserving Cyrillic
+- Reason: prettifying beautiful soup while preserving Cyrillic, HTML entities,
+  and converting <<, >> to ёлочки
 
 ## Vendor Maintenance Notes
 - Do not edit vendored files directly; modify source and re-vendor
