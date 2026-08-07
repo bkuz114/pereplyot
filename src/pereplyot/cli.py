@@ -55,6 +55,7 @@ from pereplyot.vendor.template_utils import render_template
 from pereplyot.vendor import inputfile
 from pereplyot.vendor.inputfile import Document, Chapter, Part, FileRef
 from pereplyot.vendor import beautiful_soup_utils
+from pereplyot.vendor.beautiful_soup_utils import restore_html_entities
 
 # version string to use for --version option (comes from __init__.py)
 from pereplyot import __version__
@@ -257,6 +258,95 @@ def sequential_replacements(text: str, replacements: list[list[str, str]]) -> st
     for target, replacement in replacements:
         text = text.replace(target, replacement)
     return text
+
+
+def sanitize_html(html: str) -> str:
+    """
+    Sanitize a raw HTML string for safe browser rendering.
+
+    Converts unescaped special characters to HTML entities and fixes
+    keyboard workarounds (<< and >>) so the browser renders text
+    correctly instead of misparsing it as markup.
+
+    Current post-processing actions:
+    - Converts << and >> to « and »
+    - Converts unescaped special characters (<, >, &, ", ') to their
+      HTML entity equivalents (&lt;, &gt;, &amp;, &quot;, &apos;)
+      so the browser renders them as text, not markup
+    - Preserves Cyrillic and other Unicode characters
+
+    Process:
+    1. Replace << and >> with « and » (required before next step of
+       parsing the HTML string with BeautifulSoup, else BeautifulSoup
+       will process them as malformed HTML)
+    2. Parse the HTML string into a BeautifulSoup object.
+       This gives access to BeautifulSoup.encode() and its formatter hook
+       (which is the entire point of this process).
+       Note: At this point the BeautifulSoup parse tree contains only literal
+       chars (<, >, &, etc.) -- no HTML entities.
+    3. Serialize the parse tree with encode() and a custom formatter.
+       encode() passes every text node and attribute value to the
+       formatter, which converts literal special characters (<, >,
+       &, ", ', \\xa0) to their HTML entity equivalents (&lt;, &gt;,
+       &amp;, &quot;, &apos;, &nbsp;). The result is a UTF-8 byte
+       string with Cyrillic preserved.
+    4. decode() converts the byte string back to a Python str, now
+       with properly escaped HTML entities that will render correctly
+       in the browser.
+
+    End Result:
+    - The HTML string, but with escaped HTML entities, Cyrillic preserved,
+      and <<, >> converted to «, »
+
+    Notes:
+    - prettify() could also be used to call the custom formatter, but
+      encode() is used instead, because the HTML is already well-formed — no
+      whitespace normalization or reformatting is needed, just entity restoration.
+    - Using BeautifulSoup with a custom formatter instead of substitution on
+      the raw HTML string, because the custom formatter ONLY processes text
+      within tags and their attributes (full string substitution contends
+      with HTML tags, script tags, etc.)
+
+    Args:
+        str html: HTML string to process
+
+    Returns:
+        string of updated HTML
+    """
+
+    # 1. (pre-step) Fix yolochki
+    #    convert << and >> to « and » BEFORE converting to BeautifulSoup.
+    #    If these are present when converting the HTML string to
+    #    a BeautifulSoup object, they are interpreted as malformed
+    #    HTML tags and the text between them is dropped during tree
+    #    construction. Doing this replacement before the constructor
+    #    means BeautifulSoup sees valid text content from the start.
+    html = html.replace("<<", "«").replace(">>", "»")
+
+    # 2. Parse HTML string to BeautifulSoup object
+    #    - This provides access to encode() and its custom formatter hook
+    #    - Note: at this point, parse tree only contains the unescaped
+    #      chars (<, >, &, ", ', \xa0). (even if there are HTML entities
+    #      in the raw string, BeautifulSoup will decode them back to
+    #      the unescaped chars during parsing)
+    soup = BeautifulSoup(html, "html.parser")
+
+    # 3. encode() with custom parser, to convert the unescaped chars
+    #    into their HTML entity equivalents.
+    #    - encode() passes every text string and attribute value to
+    #      the custom formatter, which will then convert unescaped
+    #      chars to the HTML entities
+    #    - The lambda is needed because the formatter
+    #      API accepts only a single callable taking one argument;
+    #      any extra options (like fix_yelochki, unused here) must
+    #      be passed through a closure. Currently, not using any
+    #      optional args, but adding here in case it's needed in future.
+    #    - unicode chars are preserved
+    #
+    # 4. decode() to de-serialize the bytes from encode() into utf-8 string
+    html = soup.encode(formatter=lambda s: restore_html_entities(s)).decode("utf-8")
+
+    return html
 
 
 # ============================================================================
@@ -730,6 +820,14 @@ def write_html_file(content: str, output: Path, force: bool) -> Path:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     # convert to BeautifulSoup and prettify
+    #
+    # Note: soup is ONLY the basic HTML file (TOC, basic page
+    # structure). The converted files are NOT included
+    # in soup; they are in the helper javascript file.
+    # This means the custom formatter being leveraged
+    # during prettify (which fixes елочки, HTML entities, etc)
+    # will not apply to that text. Any processing that needs
+    # to be done to that text is handled in serialize_html()
     soup = BeautifulSoup(content, "html.parser")
     beautiful_soup_utils.write_soup_to_file(
         soup,
@@ -1400,6 +1498,8 @@ def process_chapters(
     for i, chapter in enumerate(chapters):
         chapter_html, failed_files = process_chapter(chapter, strict, indent, em)
         failed_count += failed_files
+        # Central post-processing (fix ёлочки, preserve HTML entities, etc.)
+        chapter_html = sanitize_html(chapter_html)
         # post-process (Add title, etc)
         chapter_name = f"Chapter: {chapter.name}"
         # wrap in div and get the id attr assigned to it
