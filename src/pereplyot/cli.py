@@ -1914,7 +1914,7 @@ def main():
 
     # optionally open in browser
     if args.browser:
-        webbrowser.open(binder)
+        webbrowser.open(binder.resolve().as_uri())
 
 
 if __name__ == "__main__":
